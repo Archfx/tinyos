@@ -11,7 +11,7 @@ rm -f *.elf
 user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/03-MultiTasking 
 (master)
 $ make
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima 
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima 
 -mabi=ilp32 -T os.ld -o os.elf start.s sys.s lib.c task.c os.c user.c
 
 user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/03-MultiTasking 

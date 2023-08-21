@@ -10,12 +10,12 @@ mini-riscv-os 是仿照 [jserv](https://github.com/jserv) 的 [mini-arm-os](http
 
 目前只在 windows 10 平台中建置並測試，請安裝 git bash 與 [FreedomStudio](https://www.sifive.com/software)。
 
-下載 FreedomStudio 的 windows 版後，請將 `riscv64-unknown-elf-gcc/bin` 和 `riscv-qemu/bin` 加入系統路徑 PATH 設到 中。
+下載 FreedomStudio 的 windows 版後，請將 `riscv32-unknown-elf-gcc/bin` 和 `riscv-qemu/bin` 加入系統路徑 PATH 設到 中。
 
 舉例而言，在我的電腦中，我將下列兩個資料夾加入 PATH 中。
 
 ```
-D:\install\FreedomStudio-2020-06-3-win64\SiFive\riscv64-unknown-elf-gcc-8.3.0-2020.04.1\bin
+D:\install\FreedomStudio-2020-06-3-win64\SiFive\riscv32-unknown-elf-gcc-8.3.0-2020.04.1\bin
 
 D:\install\FreedomStudio-2020-06-3-win64\SiFive\riscv-qemu-4.2.0-2020.04.0\bin
 ```

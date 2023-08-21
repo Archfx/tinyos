@@ -91,13 +91,13 @@ int os_main(void)
 mini-riscv-os 裏的 Makefile 通常大同小異，以下是 01-HelloOs 的 Makefile.
 
 ```Makefile
-CC = riscv64-unknown-elf-gcc
+CC = riscv32-unknown-elf-gcc
 CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32
 
 QEMU = qemu-system-riscv32
 QFLAGS = -nographic -smp 4 -machine virt -bios none
 
-OBJDUMP = riscv64-unknown-elf-objdump
+OBJDUMP = riscv32-unknown-elf-objdump
 
 all: os.elf
 
@@ -137,10 +137,10 @@ os.elf: start.s os.c
 其中的 `$^` 被代換成 `start.s os.c` ，於是整個 `$(CC) $(CFLAGS) -T os.ld -o os.elf $^` 整行展開後就變成了下列指令。
 
 ```
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
 ```
 
-在 Makefile 中我們使用 riscv64-unknown-elf-gcc 去編譯，然後用 qemu-system-riscv32 去執行， 01-HelloOs 的執行過程如下：
+在 Makefile 中我們使用 riscv32-unknown-elf-gcc 去編譯，然後用 qemu-system-riscv32 去執行， 01-HelloOs 的執行過程如下：
 
 ```
 user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/01-HelloOs (master)
@@ -149,7 +149,7 @@ rm -f *.elf
 
 user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/01-HelloOs (master)
 $ make
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
 
 user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/01-HelloOs (master)
 $ make qemu
@@ -159,10 +159,10 @@ Hello OS!
 QEMU: Terminated
 ```
 
-首先用 make clean 清除上次的編譯產出，然後用 make 呼叫 riscv64-unknown-elf-gcc 編譯專案，以下是完整的編譯指令
+首先用 make clean 清除上次的編譯產出，然後用 make 呼叫 riscv32-unknown-elf-gcc 編譯專案，以下是完整的編譯指令
 
 ```
-$ riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
+$ riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
 ```
 
 其中 `-march=rv32ima` 代表我們要 [產生 32 位元 I+M+A 指令集的碼](https://www.sifive.com/blog/all-aboard-part-1-compiler-args)：

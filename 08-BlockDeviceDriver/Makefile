@@ -1,6 +1,6 @@
-CC = riscv64-unknown-elf-gcc
+CC = riscv32-unknown-elf-gcc
 CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w
-GDB = riscv64-unknown-elf-gdb
+GDB = riscv32-unknown-elf-gdb
 
 OBJ = \
 start.s \
@@ -21,7 +21,7 @@ QFLAGS = -nographic -smp 4 -machine virt -bios none
 QFLAGS += -drive if=none,format=raw,file=hdd.dsk,id=x0
 QFLAGS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-OBJDUMP = riscv64-unknown-elf-objdump
+OBJDUMP = riscv32-unknown-elf-objdump
 
 all: clean os.elf hdd.dsk qemu
 

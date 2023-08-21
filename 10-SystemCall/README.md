@@ -5,7 +5,7 @@
 ```
 austin@AustindeMacBook-Air   ~/Desktop/riscv/austin362667/mini-riscv-os/10-SystemCall     master  INSERT  make all              3309  0.75G   1.52    10:34:23 
 rm -f *.elf *.img
-riscv64-unknown-elf-gcc -I./include -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w -D CONFIG_SYSCALL -T os.ld -o os.elf src/start.s src/sys.s src/mem.s src/lib.c src/timer.c src/os.c src/task.c src/user.c src/trap.c src/lock.c src/plic.c src/virtio.c src/string.c src/alloc.c src/syscall.c src/usys.s
+riscv32-unknown-elf-gcc -I./include -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w -D CONFIG_SYSCALL -T os.ld -o os.elf src/start.s src/sys.s src/mem.s src/lib.c src/timer.c src/os.c src/task.c src/user.c src/trap.c src/lock.c src/plic.c src/virtio.c src/string.c src/alloc.c src/syscall.c src/usys.s
 Press Ctrl-A and then X to exit QEMU
 qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -drive if=none,format=raw,file=hdd.dsk,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 -kernel os.elf
 HEAP_START = 8001500c, HEAP_SIZE = 07feaff4, num of pages = 521903

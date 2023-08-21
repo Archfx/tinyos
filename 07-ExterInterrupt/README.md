@@ -5,7 +5,7 @@
 ```sh
 IAN@DESKTOP-9AEMEPL MINGW64 ~/Desktop/mini-riscv-os/07-ExterInterrupt (feat/getchar)
 $ make
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c
 
 IAN@DESKTOP-9AEMEPL MINGW64 ~/Desktop/mini-riscv-os/07-ExterInterrupt (feat/getchar)
 $ make qemu
@@ -46,7 +46,7 @@ QEMU: Terminated
 
 ```sh
 make debug
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c
 Press Ctrl-C and then input 'quit' to exit GDB and QEMU
 -------------------------------------------------------
 Reading symbols from os.elf...

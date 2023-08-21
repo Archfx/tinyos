@@ -1,6 +1,6 @@
-CC = riscv64-unknown-elf-gcc
+CC = riscv32-unknown-elf-gcc
 CFLAGS = -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32
-GDB = riscv64-unknown-elf-gdb
+GDB = riscv32-unknown-elf-gdb
 
 OBJ = \
 start.s \
@@ -16,7 +16,7 @@ lock.c
 QEMU = qemu-system-riscv32
 QFLAGS = -nographic -smp 4 -machine virt -bios none
 
-OBJDUMP = riscv64-unknown-elf-objdump
+OBJDUMP = riscv32-unknown-elf-objdump
 
 all: os.elf
 

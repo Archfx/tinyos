@@ -1,29 +1,20 @@
-[中文版說明文件](doc/tw)
 
-# mini-riscv-os
 
-<img src="./logo.png" width="300" />
+# tinyos
 
-Build a minimal multi-tasking OS kernel for RISC-V from scratch
 
-Mini-riscv-os was inspired by [jserv](https://github.com/jserv)'s [mini-arm-os](https://github.com/jserv/mini-arm-os) project.
+This is a cloned repository of [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os) that was modified to work with `riscv32i` on linux. Fully built environment is available as a docker environment. Credits to the original author.
 
-However, [ccckmit](https://github.com/ccckmit) rewrite the project for RISC-V, and run on Win10 instead of Linux.
+## Build & Run on Docker
 
-## Build & Run on Windows 10
+```shell
+docker pull archfx/rv32i:qemu # pull the docker container
+git clone https://github.com/Archfx/tinyos #clone this repository
+docker run -t -p 6080:6080 -v "${PWD}/:/tinyos" -w /tinyos --name rv32i archfx/rv32i:qemu #Mount the repo to the docker container
 
-- [git-bash](https://git-scm.com/download/win)
-- [FreedomStudio](https://www.sifive.com/software)
-
-After download and extract the FreedomStudio for windows. You have to set the system PATH to the folder of `riscv64-unknown-elf-gcc/bin` and `riscv-qemu/bin`. For example, I set PATH to the following folders.
-
+# Opern another terminal 
+docker exec -it rv32i /bin/bash
 ```
-D:\install\FreedomStudio-2020-06-3-win64\SiFive\riscv64-unknown-elf-gcc-8.3.0-2020.04.1\bin
-
-D:\install\FreedomStudio-2020-06-3-win64\SiFive\riscv-qemu-4.2.0-2020.04.0\bin
-```
-
-And you should start your git-bash to build the project. (It works for me in vscode bash terminal)
 
 ## Steps
 
@@ -47,14 +38,18 @@ And you should start your git-bash to build the project. (It works for me in vsc
   - Understanding how to write the linker script & how the heap works
 - [10-SystemCall](10-SystemCall)
   - Invoking a mini ecall from machine mode.
+
+
 ## Building and Verification
 
 - Changes the current working directory to the specified one and then
 
+```shell
+make # Compile the code
+make qemu # Simulate the code
 ```
-make
-make qemu
-```
+
+Note: `Press Ctrl-A and then X to exit QEMU`
 
 ## Licensing
 

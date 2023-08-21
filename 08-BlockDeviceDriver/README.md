@@ -6,7 +6,7 @@
 IAN@DESKTOP-9AEMEPL MINGW64 ~/Desktop/mini-riscv-os/08-BlockDeviceDriver (feat/block_driver)
 $ make all
 rm -f *.elf *.img
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c virtio.c string.c
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c virtio.c string.c
 Press Ctrl-A and then X to exit QEMU
 qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -drive if=none,format=raw,file=hdd.dsk,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 -kernel os.elf
 OS start
@@ -38,7 +38,7 @@ QEMU: Terminated
 
 ```sh
 make debug
-riscv64-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c
 Press Ctrl-C and then input 'quit' to exit GDB and QEMU
 -------------------------------------------------------
 Reading symbols from os.elf...

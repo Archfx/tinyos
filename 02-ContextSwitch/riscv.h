@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define reg_t uint32_t // RISCV32: register is 32bits
-// define reg_t as uint64_t // RISCV64: register is 64bits
+// define reg_t as uint64_t // riscv32: register is 64bits
 
 // ref: https://www.activexperts.com/serial-port-component/tutorials/uart/
 #define UART        0x10000000

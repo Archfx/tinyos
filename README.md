@@ -1,6 +1,6 @@
 
 
-# tinyos
+# tinyos 🐞
 
 
 This is a cloned repository of [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os) that was modified to work with `riscv32i` on Linux. A fully built environment is available as a docker environment. Credits to the original authors.

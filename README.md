@@ -7,6 +7,8 @@ This is a cloned repository of [mini-risscv-os](https://github.com/cccriscv/mini
 
 ## Build & Run on Docker
 
+<p align="center"><a href="https://hub.docker.com/r/archfx/rv32i"><img src="https://dockerico.blankenship.io/image/archfx/rv32i"/></a></p>
+
 ```shell
 docker pull archfx/rv32i:qemu # pull the docker container
 git clone https://github.com/Archfx/tinyos #clone this repository
@@ -18,25 +20,25 @@ docker exec -it rv32i /bin/bash
 
 ## Steps
 
-- [01-HelloOs](01-HelloOs)
+- [HelloOs](01-HelloOs)
   - Enable UART to print trivial greetings
-- [02-ContextSwitch](02-ContextSwitch)
+- [ContextSwitch](02-ContextSwitch)
   - Basic switch from OS to user task
-- [03-MultiTasking](03-MultiTasking)
+- [MultiTasking](03-MultiTasking)
   - Two user tasks are interactively switching
-- [04-TimerInterrupt](04-TimerInterrupt)
+- [TimerInterrupt](04-TimerInterrupt)
   - Enable SysTick for future scheduler implementation
-- [05-Preemptive](05-Preemptive)
+- [Preemptive](05-Preemptive)
   - Basic preemptive scheduling
-- [06-Spinlock](06-Spinlock)
+- [Spinlock](06-Spinlock)
   - Lock implementation to protect critical sections
-- [07-ExterInterrupt](07-ExterInterrupt)
+- [ExterInterrupt](07-ExterInterrupt)
   - Learning PLIC & external interruption
-- [08-BlockDeviceDriver](08-BlockDeviceDriver)
+- [BlockDeviceDriver](08-BlockDeviceDriver)
   - Learning VirtIO Protocol & Device driver implementation
-- [09-MemoryAllocator](09-MemoryAllocator)
+- [MemoryAllocator](09-MemoryAllocator)
   - Understanding how to write the linker script & how the heap works
-- [10-SystemCall](10-SystemCall)
+- [SystemCall](10-SystemCall)
   - Invoking a mini ecall from machine mode.
 
 
@@ -53,7 +55,7 @@ Note: `Press Ctrl-A and then X to exit QEMU`
 
 ## Licensing
 
-`mini-riscv-os` is freely redistributable under the two-clause BSD License.
+Original repo licence are valid here. `mini-riscv-os` is freely redistributable under the two-clause BSD License.
 Use of this source code is governed by a BSD-style license that can be found
 in the `LICENSE` file.
 

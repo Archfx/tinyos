@@ -42,13 +42,13 @@ docker exec -it rv32i /bin/bash
   - Invoking a mini ecall from machine mode.
 
 
-## Building and Verification
+## Building and Simulation
 
 - Changes the current working directory to the specified one and then
 
 ```shell
-make # Compile the code
-make qemu # Simulate the code
+make # Build the OS
+make qemu # Simulate the OS
 ```
 
 Note: `Press Ctrl-A and then X to exit QEMU`

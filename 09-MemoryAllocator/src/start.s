@@ -3,14 +3,14 @@
 .global _start
 
 _start:
-    csrr a0, mhartid                # 讀取核心代號
-    bnez a0, park                   # 若不是 0 號核心，跳到 park 停止
-    la   sp, stacks + STACK_SIZE    # 0 號核心設定堆疊
-    j    os_main                    # 0 號核心跳到主程式 os_main
+    csrr a0, mhartid                # read kernel codename
+    bnez a0, park                   # If it is not core 0, jump to park and stop
+    la   sp, stacks + STACK_SIZE    # Core Set Stack No. 0
+    j    os_main                    # Core 0 jumps to the main program os_main
 
 park:
     wfi
     j park
 
 stacks:
-    .skip STACK_SIZE                # 分配堆疊空間
+    .skip STACK_SIZE                # Allocate stack space

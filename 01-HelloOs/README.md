@@ -1,4 +1,4 @@
-# 01-Hello OS
+# Hello OS
 
 ## Build & Run
 

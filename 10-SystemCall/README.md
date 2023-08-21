@@ -1,4 +1,4 @@
-# 10-SystemCall
+# SystemCall
 
 ## Build & Run
 

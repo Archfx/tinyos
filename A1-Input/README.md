@@ -1,4 +1,4 @@
-# A1-Input
+# Input
 
 ## Build & Run
 

@@ -1,13 +1,13 @@
-# 06-Spinlock
+# Spinlock
 
 ## Build & Run
 
 ```sh
-IAN@DESKTOP-9AEMEPL MINGW64 ~/Desktop/mini-riscv-os/06-Spinlock (feat/spinlock)
+cd 06-Spinlock 
 $ make
 riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c
 
-IAN@DESKTOP-9AEMEPL MINGW64 ~/Desktop/mini-riscv-os/06-Spinlock (feat/spinlock)
+cd 06-Spinlock (feat/spinlock)
 $ make qemu
 Press Ctrl-A and then X to exit QEMU
 qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf

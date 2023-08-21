@@ -143,15 +143,15 @@ riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -m
 在 Makefile 中我們使用 riscv32-unknown-elf-gcc 去編譯，然後用 qemu-system-riscv32 去執行， 01-HelloOs 的執行過程如下：
 
 ```
-user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/01-HelloOs (master)
+cd 01-HelloOs (master)
 $ make clean
 rm -f *.elf
 
-user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/01-HelloOs (master)
+cd 01-HelloOs (master)
 $ make
 riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s os.c
 
-user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/01-HelloOs (master)
+cd 01-HelloOs (master)
 $ make qemu
 Press Ctrl-A and then X to exit QEMU
 qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf

@@ -1,9 +1,9 @@
-# 09-MemoryAllocator
+# MemoryAllocator
 
 ## Build & Run
 
 ```sh
-IAN@DESKTOP-9AEMEPL MINGW64 ~/Desktop/mini-riscv-os/09-MemoryAllocator (feat/memoryAlloc)
+cd 09-MemoryAllocator (feat/memoryAlloc)
 $ make all
 rm -f *.elf *.img
 riscv32-unknown-elf-gcc -I./include -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -w -T os.ld -o os.elf src/start.s src/sys.s src/mem.s src/lib.c src/timer.c src/task.c src/os.c src/user.c src/trap.c src/lock.c src/plic.c src/virtio.c src/string.c src/alloc.c

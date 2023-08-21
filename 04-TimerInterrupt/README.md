@@ -1,4 +1,4 @@
-# 04-TimerInterrupt
+# TimerInterrupt
 
 ## Build & Run
 

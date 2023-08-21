@@ -1,20 +1,20 @@
-# 03-MultiTasking
+# MultiTasking
 
 ## Build & Run
 
 ```sh
-user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/03-MultiTasking 
+cd 03-MultiTasking 
 (master)
 $ make clean
 rm -f *.elf
 
-user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/03-MultiTasking 
+cd 03-MultiTasking 
 (master)
 $ make
 riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima 
 -mabi=ilp32 -T os.ld -o os.elf start.s sys.s lib.c task.c os.c user.c
 
-user@DESKTOP-96FRN6B MINGW64 /d/ccc109/sp/11-os/mini-riscv-os/03-MultiTasking 
+cd 03-MultiTasking 
 (master)
 $ make qemu
 Press Ctrl-A and then X to exit QEMU

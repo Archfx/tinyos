@@ -2,12 +2,30 @@
 
 # tinyos 🐞
 
+tinyos is a tutorial series about minimal operating system kernel implementation based on the original repository [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os). This operating system kernel is based on [RISC-V](https://github.com/riscv). instrucion set architecture. Credits to the original authors. A fully built environment is available as a docker environment. This tutorial will cover  several chapters related to implementing a operating system from begining.
 
-This is a cloned repository of [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os) that was modified to work with `riscv32i` on Linux. A fully built environment is available as a docker environment. Credits to the original authors.
+## Requirements
 
-## Build & Run on Docker
+In order to complete the tutorial you just need only two things
+
+1. [tinyos](https://github.com/archfx/tinyos)
+2. [Docker](https://docs.docker.com/engine/install/)
+
+Beyond the technical requirements, inorder to understand the concepts I highly recommend to look at my [firmware tutorial](https://archfx.github.io/posts/2023/02/firmware1/) series before starting on this.
+
+## Setup the Environement on Docker
+
+Fully bulid docker environemt with all the requirements installed including 
+
+- gcc toolchain
+- qemu with RISC-V simulator
+
+can be found in the following docker-hub reposiroty.
 
 <p align="center"><a href="https://hub.docker.com/r/archfx/rv32i"><img src="https://dockerico.blankenship.io/image/archfx/rv32i"/></a></p>
+
+
+You can follow the below instructions to get it mount on your docker stack.
 
 ```shell
 docker pull archfx/rv32i:qemu # pull the docker container
@@ -18,7 +36,7 @@ docker run -t -p 6080:6080 -v "${PWD}/:/tinyos" -w /tinyos --name rv32i archfx/r
 docker exec -it rv32i /bin/bash
 ```
 
-## Steps
+## Chapters
 
 - [HelloOs](01-HelloOs)
   - Enable UART to print trivial greetings

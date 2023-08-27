@@ -78,6 +78,7 @@ Use of this source code is governed by a BSD-style license that can be found in 
 
 ## Reference
 
+- [mini-riscv-os](https://github.com/cccriscv/mini-riscv-os)
 - [Adventures in RISC-V](https://matrix89.github.io/writes/writes/experiments-in-riscv/)
 - [Xv6, a simple Unix-like teaching operating system](https://pdos.csail.mit.edu/6.828/2020/xv6.html)
 - [Basics of programming a UART](https://www.activexperts.com/serial-port-component/tutorials/uart/)

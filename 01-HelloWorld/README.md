@@ -28,7 +28,7 @@ Hello OS!</code>
 
 ## os.c
 
-https://github.com/ccc-c/mini-riscv-os/blob/master/01-HelloOs/os.c
+Find the file [here](https://github.com/Archfx/tinyos/blob/master/01-HelloWorld/os.c)
 
 ```cpp
 #include <stdint.h>
@@ -58,7 +58,7 @@ int os_main(void)
 The preset RISC-V virtual machine in QEMU is called virt, and the UART memory mapping location starts from 0x10000000, and the mapping method is as follows:
 
 ```
-UART 映射區
+UART MemoryMapped IO
 
 0x10000000 THR (Transmitter Holding Register) RHR (Receive Holding Register)
 0x10000001 IER (Interrupt Enable Register)

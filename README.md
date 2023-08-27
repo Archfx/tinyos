@@ -73,7 +73,7 @@ Note: `Press Ctrl-A and then X to exit QEMU`
 
 ## Licensing
 
-This repo adheres to the original repo licenses. `mini-riscv-os` is freely redistributable under the two-clause BSD License.
+This repo adheres to the [original repo](https://github.com/cccriscv/mini-riscv-os) licenses. `mini-riscv-os` is freely redistributable under the two-clause BSD License.
 Use of this source code is governed by a BSD-style license that can be found in the `LICENSE` file.
 
 ## Reference

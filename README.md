@@ -8,10 +8,10 @@ tinyos is a tutorial series about minimal operating system kernel implementation
 
 In order to complete the tutorial you just need only two things
 
-1. [tinyos](https://github.com/archfx/tinyos)
+1. [tinyos repo](https://github.com/archfx/tinyos)
 2. [Docker](https://docs.docker.com/engine/install/)
 
-Beyond the technical requirements, inorder to understand the concepts I highly recommend to look at my [firmware tutorial](https://archfx.github.io/posts/2023/02/firmware1/) series before starting on this.
+Beyond the technical requirements, inorder to understand the concepts I highly recommend looking at my [firmware tutorial](https://archfx.github.io/posts/2023/02/firmware1/) series before starting on this.
 
 ## Setup the Environement on Docker
 
@@ -38,7 +38,7 @@ docker exec -it rv32i /bin/bash
 
 ## Chapters
 
-- [HelloOs](01-HelloOs)
+- [HelloWorld](01-HelloWorld)
   - Enable UART to print trivial greetings
 - [ContextSwitch](02-ContextSwitch)
   - Basic switch from OS to user task

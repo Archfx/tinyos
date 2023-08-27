@@ -1,6 +1,6 @@
 # HelloWorld I/O program
 
-In this series of articles, we will introduce how to build an embedded operating system on a RISC-V processor, the operating system name is mini-riscv-os. (actually a series of programs, not a single system)
+In this series of articles, we will introduce how to build an embedded operating system on a RISC-V processor, the operating system name is tinyos.
 
 First of all, in this chapter, we will introduce how to write the simplest program that can print `Hello World!`!
 

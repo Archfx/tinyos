@@ -1,14 +1,14 @@
 
 
-# tinyos 🐞
+# TinyOS🐞
 
-tinyos is a tutorial series about minimal operating system kernel implementation based on the comprehensive tutorial series [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os). This operating system kernel is based on [RISC-V](https://github.com/riscv). instrucion set architecture. Credits to the original authors. A fully built environment is available as a docker environment. This tutorial will cover  several chapters related to implementing a operating system from begining.
+TinyOSis a tutorial series about minimal operating system kernel implementation based on the comprehensive tutorial series [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os). This operating system kernel is based on [RISC-V](https://github.com/riscv). instrucion set architecture. Credits to the original authors. A fully built environment is available as a docker environment. This tutorial will cover  several chapters related to implementing a operating system from begining.
 
 ## Requirements
 
 In order to complete the tutorial you just need only two things
 
-1. [tinyos repo](https://github.com/archfx/tinyos)
+1. [TinyOS repo](https://github.com/archfx/tinyos)
 2. [Docker](https://docs.docker.com/engine/install/)
 
 Beyond the technical requirements, inorder to understand the concepts I highly recommend looking at my [firmware tutorial](https://archfx.github.io/posts/2023/02/firmware1/) series before starting on this.

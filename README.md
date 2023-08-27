@@ -2,7 +2,7 @@
 
 # tinyos 🐞
 
-tinyos is a tutorial series about minimal operating system kernel implementation based on the original repository [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os). This operating system kernel is based on [RISC-V](https://github.com/riscv). instrucion set architecture. Credits to the original authors. A fully built environment is available as a docker environment. This tutorial will cover  several chapters related to implementing a operating system from begining.
+tinyos is a tutorial series about minimal operating system kernel implementation based on the comprehensive tutorial series [mini-risscv-os](https://github.com/cccriscv/mini-riscv-os). This operating system kernel is based on [RISC-V](https://github.com/riscv). instrucion set architecture. Credits to the original authors. A fully built environment is available as a docker environment. This tutorial will cover  several chapters related to implementing a operating system from begining.
 
 ## Requirements
 

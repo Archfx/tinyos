@@ -35,7 +35,7 @@ int os_main(void)
 }
 ```
 
-Task `task` is a function, which is `user_task0`` in the main file. In order to switch, we set `ctx_task.ra` as `user_task0`. Since `ra` is a return address register, its function is to set the return adress (`ra`) to the program counter (`pc`), so that it can jump to this function to execute when executing the `ret` instruction.
+Task `task` is a function, which is `user_task0` in the main file. In order to switch, we set `ctx_task.ra` as `user_task0`. Since `ra` is a return address register, its function is to set the return adress (`ra`) to the program counter (`pc`), so that it can jump to this function to execute when executing the `ret` instruction.
 
 ```c
 	ctx_task.ra = (reg_t) user_task0;

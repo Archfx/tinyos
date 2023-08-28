@@ -1,14 +1,15 @@
-# 02-ContextSwitch -- RISC-V 
+# ContextSwitch - RISC-V 
 
 
-In the previous chapter [01-HelloOs](01-HelloOs.md), we introduced how to print strings to the UART serial port under the RISC-V architecture. In this chapter, we will move forward to the operating system and introduce The mysterious "Context-Switch" technology.
+In the previous episode [HelloWorld](https://archfx.github.io/posts/2023/08/tinyos1/) of *TinyOS*, we discussed how to print strings to the UART serial port for a specific processor on QEMU that utilises RISC-V architecture. This episode takes us further into the operating system territory, introducing the concept of "Context-Switch."
 
-## os.c
+## Main File (os.c)
 
-The following is the main program os.c of 02-ContextSwitch. In addition to the os itself, this program also has a "task".
-* https://github.com/ccc-c/mini-riscv-os/blob/master/02-ContextSwitch/os.c
+This time, in addition to stuff that we had earlier, we have a function called `task`
 
-```cpp
+You can find the complete code [os.c](https://github.com/Archfx/tinyos/blob/master/02-ContextSwitch/os.c) from [here](https://github.com/Archfx/tinyos/tree/master/02-ContextSwitch).
+
+```c
 #include "os.h"
 
 #define STACK_SIZE 1024
@@ -34,16 +35,16 @@ int os_main(void)
 }
 ```
 
-Task `task` is a function, which is user_task0 in the above os.c. In order to switch, we set ctx_task.ra as user_task0. Since ra is a return address register, its function is to use Ra replaces the program counter pc, so that it can jump to this function to execute when executing the ret instruction.
+Task `task` is a function, which is `user_task0`` in the main file. In order to switch, we set `ctx_task.ra` as `user_task0`. Since `ra` is a return address register, its function is to set the return adress (`ra`) to the program counter (`pc`), so that it can jump to this function to execute when executing the `ret` instruction.
 
-```cpp
+```c
 	ctx_task.ra = (reg_t) user_task0;
 	ctx_task.sp = (reg_t) &task0_stack[STACK_SIZE-1];
 	sys_switch(&ctx_os, &ctx_task);
 ```
 
-But each task must have stack space to make function calls in the C locale. So we allocate the stack space for task0 and use ctx_task.sp to point to the beginning of the stack.
-Then we called `sys_switch(&ctx_os, &ctx_task)` to switch from the main program to task0, where sys_switch is located in [sys.s](https://github.com/ccc-c/mini-riscv-os/blob/ master/02-ContextSwitch/sys.s) to combine language functions, the content is as follows:
+However, each task needs stack space to execute function calls within the C context. As a result, we allocate stack space for `task0` and utilize `ctx_task.sp` to reference the stack's starting point.
+Then we can use `sys_switch(&ctx_os, &ctx_task)` to switch from the main program to `task0`, where `sys_switch` is located in [sys.s](https://github.com/Archfx/tinyos/blob/master/02-ContextSwitch/sys.s) to combine language functions, the content is as follows:
 
 ```s
 # Context switch
@@ -62,19 +63,19 @@ sys_switch:
 
 In RISC-V, the parameters are mainly placed in the temporary registers a0, a1, ..., a7. When there are more than eight parameters, they will be passed on the stack.
 
-The C language function corresponding to sys_switch is as follows:
+The C language function corresponding to `sys_switch` is as follows:
 
-```cpp
+```c
 void sys_switch(struct context *old, struct context *new);
 ```
 
-In the above program, a0 corresponds to old (the context of the old task), and a1 corresponds to new (the context of the new task). The function of the entire sys_switch is to store the context of the old task, and then load the context of the new task to start execution.
+In the above program, `a0` corresponds to old value (the context of the old task), and a1 corresponds to new value (the context of the new task). The function of the entire `sys_switch` is to store the context of the old task, and then load the context of the new task to start execution.
 
-The last ret instruction is very important, because when the context of the new task is loaded, the ra register will also be loaded, so when ret is executed, it will set pc=ra, and then jump to the new task (such as `void user_task0 (void)` went to execute.
+The last `ret` instruction is very important, because when the context of the new task is loaded, the `ra` register will also be loaded, so when `ret` is executed, it will set `pc=ra`, and then jump to the new task (such as `void user_task0 (void)`) that needs to be executed next.
 
-`ctx_save` and `ctx_load` in sys_switch are two assembly language macros, which are defined as follows:
+`ctx_save` and `ctx_load` in sys_switch are two assembly [macros](https://en.wikipedia.org/wiki/Macro_(computer_science)), which are defined as follows:
 
-```s
+```c
 # ============ MACRO ==================
 .macro ctx_save base
         sw ra, 0(\base)
@@ -112,13 +113,11 @@ The last ret instruction is very important, because when the context of the new 
 # ============ Macro END   ==================
 ```
 
-RISC-V must store ra, sp, s0, ... s11 and other temporary registers when switching between schedules. The above code is basically copied from the xv6 teaching operating system and modified to RISC-V 32-bit version , its original URL is as follows:
+RISC-V must store `ra`, `sp`, `s0`, ... `s11` and other temporary registers when switching between schedules. The above code is basically copied from the [xv6](https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/swtch.S) teaching operating system kernel and modified for RISC-V 32-bit application.
 
-* https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/swtch.S
+In [riscv.h](https://github.com/ccc-c/mini-riscv-os/blob/master/02-ContextSwitch/riscv.h) this header file, we defined the corresponding struct context The C language structure of , struct contents are direclty taken from the registers.
 
-In [riscv.h](https://github.com/ccc-c/mini-riscv-os/blob/master/02-ContextSwitch/riscv.h) this header file, we defined the corresponding struct context The C language structure of , its content is as follows:
-
-```cpp
+```c
 // Saved registers for kernel context switches.
 struct context {
   reg_t ra;
@@ -139,9 +138,9 @@ struct context {
   reg_t s11;
 };
 ```
-In this way, we have introduced the details of the "Content Switching" task, so the following main program can smoothly switch from os_main to user_task0.
+Now from the main file, we need to set the task pointers to the `ra` and `sp`, and we can use the `sys_switch` function to smoothly switch from `os_main` to `user_task0`.
 
-```cpp
+```c
 int os_main(void)
 {
 	lib_puts("OS start\n");
@@ -152,20 +151,24 @@ int os_main(void)
 }
 ```
 
-The following are the execution results of the entire project:
+You can run the simulation on QEMU with the [archfx/rv32i:qemu](https://hub.docker.com/repository/docker/archfx/rv32i/general) docker containter mounted with the [tinyos repo](https://github.com/archfx/tinyos) following the below steps;
 
-```sh
+```shell
 cd 03-ContextSwitch 
-$ make 
-riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s sys.s lib.c os.c
-
-cd 03-ContextSwitch 
-$ make qemu
-Press Ctrl-A and then X to exit QEMU
-qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf
-OS start
-Task0: Context Switch Success !
-QEMU: Terminated
+make 
 ```
+<code>riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -T os.ld -o os.elf start.s sys.s lib.c os.c</code>
 
-The above is the implementation method of the "Context-Switch" mechanism in RISC-V!
+
+```shell
+make qemu
+```
+<code>
+Press Ctrl-A and then X to exit QEMU<br>
+qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf<br>
+OS start<br>
+Task0: Context Switch Success !<br>
+QEMU: Terminated<br>
+</code>
+
+We looked at the basic details about the implementation of the "Context-Switch" mechanism within the RISC-V architecture. This method showcases how tasks are managed and their execution contexts transitioned, contributing to the overall functionality and efficiency of the system.

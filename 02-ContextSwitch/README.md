@@ -44,9 +44,12 @@ Task `task` is a function, which is `user_task0`` in the main file. In order to 
 ```
 
 However, each task needs stack space to execute function calls within the C context. As a result, we allocate stack space for `task0` and utilize `ctx_task.sp` to reference the stack's starting point.
+
+## System Switch function
+
 Then we can use `sys_switch(&ctx_os, &ctx_task)` to switch from the main program to `task0`, where `sys_switch` is located in [sys.s](https://github.com/Archfx/tinyos/blob/master/02-ContextSwitch/sys.s) to combine language functions, the content is as follows:
 
-```s
+```c
 # Context switch
 #
 #   void sys_switch(struct context *old, struct context *new);
@@ -61,7 +64,7 @@ sys_switch:
         ret          # pc=ra; swtch to new task (new->ra)
 ```
 
-In RISC-V, the parameters are mainly placed in the temporary registers a0, a1, ..., a7. When there are more than eight parameters, they will be passed on the stack.
+In RISC-V, the parameters are mainly placed in the temporary registers `a0`, `a1`, ..., `a7`. When there are more than eight parameters, they will be passed on the stack.
 
 The C language function corresponding to `sys_switch` is as follows:
 
@@ -113,9 +116,11 @@ The last `ret` instruction is very important, because when the context of the ne
 # ============ Macro END   ==================
 ```
 
-RISC-V must store `ra`, `sp`, `s0`, ... `s11` and other temporary registers when switching between schedules. The above code is basically copied from the [xv6](https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/swtch.S) teaching operating system kernel and modified for RISC-V 32-bit application.
+RISC-V must store `ra`, `sp`, `s0`, ... `s11` and other temporary registers when switching between schedules. The above code is from the [xv6](https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/swtch.S) teaching operating system kernel and modified for RISC-V 32-bit application.
 
-In [riscv.h](https://github.com/ccc-c/mini-riscv-os/blob/master/02-ContextSwitch/riscv.h) this header file, we defined the corresponding struct context The C language structure of , struct contents are direclty taken from the registers.
+## Struct for Register Contents
+
+In [riscv.h](https://github.com/ccc-c/mini-riscv-os/blob/master/02-ContextSwitch/riscv.h) header file, we have to define corresponding struct for context related registers. 
 
 ```c
 // Saved registers for kernel context switches.
@@ -150,6 +155,8 @@ int os_main(void)
 	return 0;
 }
 ```
+
+## Execute with QEMU
 
 You can run the simulation on QEMU with the [archfx/rv32i:qemu](https://hub.docker.com/repository/docker/archfx/rv32i/general) docker containter mounted with the [tinyos repo](https://github.com/archfx/tinyos) following the below steps;
 

@@ -22,18 +22,18 @@ Fully bulid docker environemt with all the requirements installed including
 
 can be found in the following docker-hub reposiroty.
 
-<p align="center"><a href="https://hub.docker.com/r/archfx/rv32i"><img src="https://dockerico.blankenship.io/image/archfx/rv32i"/></a></p>
+<p align="center"><a href="https://hub.docker.com/r/archfx/rvutils"><img src="https://dockerico.blankenship.io/image/archfx/rvutils"/></a></p>
 
 
 You can follow the below instructions to get it mount on your docker stack.
 
 ```shell
-docker pull archfx/rv32i:qemu # pull the docker container
+docker pull archfx/rvutils:qemu # pull the docker container
 git clone https://github.com/Archfx/tinyos #clone this repository
-docker run -t -p 6080:6080 -v "${PWD}/:/tinyos" -w /tinyos --name rv32i archfx/rv32i:qemu #Mount the repo to the docker container
+docker run -t -p 6080:6080 -v "${PWD}/:/tinyos" -w /tinyos --name rvutils archfx/rvutils:qemu #Mount the repo to the docker container
 
 # Opern another terminal 
-docker exec -it rv32i /bin/bash
+docker exec -it rvutils /bin/bash
 ```
 
 ## Chapters

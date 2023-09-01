@@ -158,7 +158,7 @@ int os_main(void)
 
 ## Execute with QEMU
 
-You can run the simulation on QEMU with the [archfx/rv32i:qemu](https://hub.docker.com/repository/docker/archfx/rv32i/general) docker containter mounted with the [tinyos repo](https://github.com/archfx/tinyos) following the below steps;
+You can run the simulation on QEMU with the [archfx/rvutils:qemu](https://hub.docker.com/repository/docker/archfx/rvutils/general) docker containter mounted with the [tinyos repo](https://github.com/archfx/tinyos) following the below steps;
 
 ```shell
 cd 03-ContextSwitch 

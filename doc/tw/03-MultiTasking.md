@@ -8,24 +8,23 @@
 
 [sys.s]:https://github.com/ccc-c/mini-riscv-os/blob/master/03-MultiTasking/sys.s
 
-專案 -- https://github.com/ccc-c/mini-riscv-os/tree/master/03-MultiTasking
+Project -- https://github.com/ccc-c/mini-riscv-os/tree/master/03-MultiTasking
 
-在前一章的 [02-ContextSwitch](02-ContextSwitch.md) 中我們介紹了 RISC-V 架構下的內文切換機制，這一章我們將進入多行程的世界，介紹如何撰寫一個《協同式多工》作業系統。
+In the previous chapter [02-ContextSwitch](02-ContextSwitch.md), we introduced the context switching mechanism under the RISC-V architecture. Multitasking" operating system.
 
-## 協同式多工
+## Cooperative multitasking
 
-現代的作業系統，都有透過時間中斷強制中止行程的《搶先》(Preemptive) 功能，這樣就能在某行程霸佔 CPU 太久時，強制將其中斷，切換給別的行程執行。
+Modern operating systems have a "Preemptive" function that forcibly terminates the process through time interruption, so that when a certain process occupies the CPU for too long, it is forcibly interrupted and switched to another process for execution.
 
-但是在沒有時間中斷機制的系統中，作業系統《無法中斷惡霸行程》，因此必須依賴各個行程主動交回控制權給作業系統，才能讓所有行程都有機會執行。
+However, in a system without a time interruption mechanism, the operating system "cannot interrupt the bully's schedule", so it must rely on each schedule to actively return control to the operating system in order to allow all schedules to have a chance to execute.
 
-這種仰賴自動交還機制的多行程系統，稱為《協同式多工》(Coorperative Multitasking) 系統。
+This multi-travel system that relies on an automatic return mechanism is called a "Coorperative Multitasking" system.
 
-1991 年微軟推出的 Windows 3.1 ，還有單板電腦 arduino 上的 [HeliOS](https://github.com/MannyPeterson/HeliOS)，都是《協同式多工》機制的作業系統。
+Windows 3.1 launched by Microsoft in 1991, as well as [HeliOS] (https://github.com/MannyPeterson/HeliOS) on the single-board computer arduino, are all operating systems of the "cooperative multitasking" mechanism.
 
-在本章中，我們將設計一個在 RISC-V 處理器上的《協同式多工》作業系統。
+In this chapter, we will design a "cooperative multitasking" job system on a RISC-V processor.
 
-首先讓我們來看看該系統的執行結果。
-
+First let's take a look at the system's performance.
 ```sh
 $ make qemu
 Press Ctrl-A and then X to exit QEMU
@@ -70,16 +69,15 @@ Task0: Running...
 QEMU: Terminated
 ```
 
-您可以看到該系統在兩個任務 Task0, Task1 之間不斷切換，但實際上的切換過程如下： 
+You can see that the system keeps switching between two tasks Task0, Task1, but the actual switching process is as follows:
 
 ```
-OS=>Task0=>OS=>Task1=>OS=>Task0=>OS=>Task1 ....
+OS=>Task0=>OS=>Task1=>OS=>Task0=>OS=>Task1  …
 ```
 
-## 使用者任務 [user.c]
+## User tasks [user.c]
 
-在 [user.c] 中我們定義了 user_task0 與 user_task1 兩個 task，並且在 user_init 函數終將這兩個 task 初始化。
-
+In [user.c] we define two tasks, user_task0 and user_task1, and finally initialize these two tasks in the user_init function.
 * https://github.com/ccc-c/mini-riscv-os/blob/master/03-MultiTasking/user.c
 
 ```cpp
@@ -115,10 +113,9 @@ void user_init() {
 }
 ```
 
-## 主程式 [os.c]
+## main program [os.c]
 
-然後在作業系統主程式 os.c 當中，我們使用大輪迴的方式，安排每個行程按照順序輪迴的執行。
-
+Then, in the main program os.c of the operating system, we use the big cycle method to arrange each process to be executed sequentially.
 * https://github.com/ccc-c/mini-riscv-os/blob/master/03-MultiTasking/os.c
 
 ```cpp
@@ -149,10 +146,9 @@ int os_main(void)
 }
 ```
 
-上述排程方法原則上和 [Round Robin Scheduling](https://en.wikipedia.org/wiki/Round-robin_scheduling) 一致，但是 Round Robin Scheduling 原則上必須搭配時間中斷機制，但本章的程式碼沒有時間中斷，所以只能說是協同式多工版本的 Round Robin Scheduling。
+The above scheduling method is in principle consistent with [Round Robin Scheduling](https://en.wikipedia.org/wiki/Round-robin_scheduling), but Round Robin Scheduling must be equipped with a time interruption mechanism in principle, but the code in this chapter has no time Interruption, so it can only be said to be the Round Robin Scheduling of the collaborative multitasking version.
 
-協同式多工必須依賴各個 task 主動交回控制權，像是在 user_task0 裏，每當呼叫 os_kernel() 函數時，就會呼叫內文切換機制，將控制權交回給作業系統 [os.c] 。
-
+Cooperative multitasking must rely on each task to actively return control. For example, in user_task0, whenever the os_kernel() function is called, the context switching mechanism will be called to return control to the operating system [os.c] .
 ```cpp
 void user_task0(void)
 {
@@ -167,16 +163,14 @@ void user_task0(void)
 }
 ```
 
-其中 [os.c] 的 os_kernel() 會呼叫 [task.c] 的 task_os()
-
+The os_kernel() of [os.c] will call the task_os() of [task.c]
 ```cpp
 void os_kernel() {
 	task_os();
 }
 ```
 
-而 task_os() 則會呼叫組合語言 [sys.s] 裏的 sys_switch 去切換回作業系統中。
-
+And task_os() will call sys_switch in assembly language [sys.s] to switch back to the operating system.
 ```cpp
 // switch back to os
 void task_os() {
@@ -186,7 +180,7 @@ void task_os() {
 }
 ```
 
-於是整個系統就在 os_main(), user_task0(), user_task1() 三者的協作下，以互相禮讓的方式輪流執行著。
+So the whole system is executed in turn in a polite way under the cooperation of os_main(), user_task0(), user_task1().
 
 [os.c]
 
@@ -235,5 +229,4 @@ void user_task1(void)
 }
 ```
 
-以上就是 RISC-V 處理器上一個具體而微的協同式多工作業系統範例了！
-
+The above is an example of a specific and micro cooperative multitasking system on the RISC-V processor!

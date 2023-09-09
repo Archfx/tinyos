@@ -13,7 +13,7 @@ However, in a system without a time interruption mechanism, the operating system
 
 This notion of multi-tasking system that relies on an automatic return mechanism is called a **Coorperative Multitasking** system.
 
-Windows 3.1 launched by Microsoft in 1991, as well as [HeliOS] (https://github.com/MannyPeterson/HeliOS) on the single-board computer arduino, are all operating systems that employee "cooperative multitasking" mechanism.
+Windows 3.1 launched by Microsoft in 1991, as well as [HeliOS](https://github.com/MannyPeterson/HeliOS) on the single-board computer arduino, are all operating systems that employee "cooperative multitasking" mechanism.
 
 In this chapter, we will design a "cooperative multitasking" job system on a RISC-V processor.
 
@@ -36,36 +36,36 @@ OS: Activate next task<br>
 Task0: Created!<br>
 Task0: Now, return to kernel mode<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task1: Created!<br>
 Task1: Now, return to kernel mode<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task0: Running...<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task1: Running...<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task0: Running...<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task1: Running...<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task0: Running...<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task1: Running...<br>
 OS: Back to OS<br>
-
+&nbsp; <br>
 OS: Activate next task<br>
 Task0: Running...<br>
 QEMU: Terminated<br>

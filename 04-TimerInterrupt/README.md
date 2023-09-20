@@ -161,9 +161,9 @@ timer_handler: 9<br>
 
 The system will consistantly print out a message like `timer_handler: i` about once per second, which means that the time interrupt mechanism is successfully started and interrupts are performed regularly.
 
-## Main program [os.c]
+## Discussion
 
-Before explaining time interruption, let us first take a look at the contents of the operating system main program [os.c].
+Before explaining time interruption, let us first take a look at the contents of the operating system main program [os.c](https://github.com/Archfx/tinyos/blob/master/04-TimerInterrupt/os.c).
 
 ```cpp
 #include "os.h"

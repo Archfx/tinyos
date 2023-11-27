@@ -7,17 +7,17 @@
 [task.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/task.c
 [user.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/user.c
 
-專案 -- https://github.com/ccc-c/mini-riscv-os/tree/master/05-Preemptive
 
-第三章的 [03-MultiTasking](03-MultiTasking.md) 中我們實作了一個《協同式多工》作業系統。不過由於沒有引入時間中斷機制，無法成為一個《搶先式》(Preemptive) 多工系統。
+In [03-MultiTasking](03-MultiTasking.md) in Chapter 3, we implemented a "Cooperative Multitasking" operating system. However, since no time interruption mechanism is introduced, it cannot become a "Preemptive" multi-tasking system.
 
-第四章的 [04-TimerInterrupt](04-TimerInterrupt.md) 中我們示範了 RISC-V 的時間中斷機制原理。
+In [04-TimerInterrupt](04-TimerInterrupt.md) in Chapter 4, we demonstrate the principle of RISC-V’s time interrupt mechanism.
 
-終於到了第五章，我們打算結合前兩章的技術，實作一個具有強制時間中斷的《可搶先式》(Preemptive) 作業系統。這樣的系統就可以算是一個微型的嵌入式作業系統了。
+Finally, we have reached Chapter 5. We plan to combine the technology of the first two chapters to implement a "Preemptive" operating system with forced time interruption. Such a system can be regarded as a miniature embedded operating system.
 
-## 系統執行
 
-首先讓我們和看系統的執行狀況，您可以看到下列執行結果中，系統在 OS, Task0, Task1 之間輪流的切換著。
+## System execution
+
+First, let us take a look at the execution status of the system. You can see that in the following execution results, the system switches between OS, Task0, and Task1 in turn.
 
 ```sh
 $ make qemu
@@ -61,14 +61,13 @@ Task0: Running...
 QEMU: Terminated
 ```
 
-這個狀況和第三章的 [03-MultiTasking](03-MultiTasking.md) 非常類似，都是如下的執行順序。
+This situation is very similar to [03-MultiTasking](03-MultiTasking.md) in Chapter 3, both of which have the following execution sequence.
 
 ```
-OS=>Task0=>OS=>Task1=>OS=>Task0=>OS=>Task1 ....
+OS=>Task0=>OS=>Task1=>OS=>Task0=>OS=>Task1....
 ```
 
-唯一不同的是，第三章的使用者行程必須主動透過 `os_kernel()` 歸還控制權給作業系統，
-
+The only difference is that the user process in Chapter 3 must actively return control to the operating system through `os_kernel()`.
 ```cpp
 void user_task0(void)
 {
@@ -83,8 +82,7 @@ void user_task0(void)
 }
 ```
 
-但是在本章的 [05-Preemptive](05-Preemptive.md) 中，使用者行程不需要主動交還給 OS，而是由 OS 透過時間中斷強制進行切換動作。
-
+However, in [05-Preemptive](05-Preemptive.md) of this chapter, the user schedule does not need to be actively handed back to the OS, but the OS forces the switching action through time interruption.
 ```cpp
 void user_task0(void)
 {
@@ -96,7 +94,7 @@ void user_task0(void)
 }
 ```
 
-其中的 [lib.c] 裏的 lib_delay 其實是個延遲迴圈，並不會交還控制權。
+The lib_delay in [lib.c] is actually a delay loop and does not return control.
 
 ```cpp
 void lib_delay(volatile int count)
@@ -106,13 +104,13 @@ void lib_delay(volatile int count)
 }
 ```
 
-相反的，作業系統會透過時間中斷，強制取回控制權。(由於 lib_delay 延遲較久，所以作業系統通常會打斷其 `while (count--)` 的迴圈取回控制權)
+On the contrary, the operating system will forcefully take back control through time interruption. (Because lib_delay has a long delay, the operating system usually interrupts its `while (count--)` loop to take back control)
 
-## 作業系統 [os.c]
+## Operating system [os.c]
 
 - https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/os.c
 
-作業系統 os.c 一開始會呼叫 `user_init()` ，讓使用者建立 task (在本範例中會在 [user.c] 裏建立 user_task0 與 user_task1。
+The operating system os.c will initially call `user_init()` to allow the user to create tasks (in this example, user_task0 and user_task1 will be created in [user.c].
 
 ```cpp
 #include "os.h"
@@ -141,7 +139,7 @@ void user_init() {
 }
 ```
 
-然後作業系統會在 `os_start()` 裏透過 `timer_init()` 函數設定時間中斷，接著就是進入 `os_main()` 的主迴圈裏，該迴圈採用 Round-Robin 的大輪迴排班方法，每次切換就選下一個 task 來執行 (若已到最後一個 task ，接下來就是第 0 個 task)。
+Then the operating system will set the time interrupt through the `timer_init()` function in `os_start()`, and then enter the main loop of `os_main()`, which adopts Round-Robin's large cycle scheduling. Method, each time you switch, select the next task to execute (if you have reached the last task, the next task will be the 0th task).
 
 ```cpp
 
@@ -173,7 +171,7 @@ int os_main(void)
 }
 ```
 
-在 05-Preemptive 的中斷機制中，我們修改了中斷向量表:
+In the interrupt mechanism of 05-Preemptive, we modified the interrupt vector table:
 
 ```cpp
 .globl trap_vector
@@ -198,7 +196,8 @@ trap_vector:
 	mret
 ```
 
-當中斷發生時，中斷向量表 `trap_vector()` 會呼叫 `trap_handler()` :
+When an interrupt occurs, the interrupt vector table `trap_vector()` will call `trap_handler()`:
+
 
 ```cpp
 reg_t trap_handler(reg_t epc, reg_t cause)
@@ -244,7 +243,7 @@ reg_t trap_handler(reg_t epc, reg_t cause)
 }
 ```
 
-跳到 `trap_handler()` 之後，它會針對不同類型的中斷呼叫不同的 handler ，所以我們可以將它視為一個中斷的派發任務中繼站:
+After jumping to `trap_handler()`, it will call different handlers for different types of interrupts, so we can think of it as an interrupt dispatch task relay station:
 
 ```
                          +----------------+
@@ -260,8 +259,7 @@ reg_t trap_handler(reg_t epc, reg_t cause)
                          +-----------------+
 ```
 
-`trap_handler` 可以根據不同的中斷類型，將中斷處理交給不同的 handler ，這樣子做就可以大大的提高作業系統的擴充性。
-
+`trap_handler` can hand over interrupt processing to different handlers according to different interrupt types. This can greatly improve the scalability of the operating system.
 ```cpp
 #include "timer.h"
 
@@ -304,7 +302,7 @@ void timer_handler()
 
 ```
 
-看到 [timer.c] 裏的 `timer_handler()`，它會將 `MTIMECMP` 做 reset 的動作。
+See `timer_handler()` in [timer.c], it will reset `MTIMECMP`.
 
 ```cpp
 /* In trap_handler() */
@@ -321,19 +319,19 @@ case 7:
 // ...
 ```
 
-- 為了避免 Timer Interrupt 出現中断嵌套的情況，在處理中斷之前， `trap_handler()` 會將 timer interrupt 關閉，等到處理完成後再打開。
-- `timer_handler()` 執行完畢後， `trap_handler()` 會將 mepc 指向 `os_kernel()` ，做到任務切換的功能。
-  換言之，如果中斷不屬於 Timer Interrupt ， Program counter 則會跳回進入中斷前的狀態，這個步驟定義在 `trap_vector()` 中:
+- In order to avoid interrupt nesting in Timer Interrupt, `trap_handler()` will close the timer interrupt before processing the interrupt, and then open it again after the processing is completed.
+- After `timer_handler()` is executed, `trap_handler()` will point mepc to `os_kernel()` to achieve the task switching function.
+  In other words, if the interrupt does not belong to Timer Interrupt, the Program counter will jump back to the state before entering the interrupt. This step is defined in `trap_vector()`:
 
 ```assembly=
 csrr	a0, mepc # a0 => arg1 (return_pc) of trap_handler()
 ```
 
-> **補充**
-> 在 RISC-V 中，函式的參數會被優先存進 a0 - a7 暫存器，如果不夠用，才會存入 Stack 。
-> 其中， a0 與 a1 暫存器還有作為函式返回值的作用。
+> **Note**
+> In RISC-V, the parameters of the function will be stored in the a0 - a7 registers first. If there are not enough, they will be stored in the Stack.
+> Among them, the a0 and a1 registers also serve as function return values.
 
-最後，記得在 Kernel 開機時導入 trap 以及 timer 的初始化動作:
+Finally, remember to import the trap and timer initialization actions when the Kernel is started:
 
 ```cpp
 void os_start()
@@ -345,35 +343,36 @@ void os_start()
 }
 ```
 
-透過時間中斷強制取回控制權，我們就不用擔心有惡霸行程把持 CPU 不放，系統也就不會被惡霸卡住而整個癱瘓了，這就是現代作業系統中最重要的《行程管理機制》。
+By forcibly taking back control through time interruption, we don't have to worry about a bully schedule taking over the CPU, and the system will not be stuck by the bully and completely paralyzed. This is the most important "schedule management mechanism" in modern operating systems. .
 
-雖然 mini-riscv-os 只是個微型的嵌入式作業系統，但是仍然透過相對精簡的程式碼，示範了一個具體而微的《可搶先作業系統》之設計原理。
+Although mini-riscv-os is just a micro embedded operating system, it still demonstrates the design principle of a specific and micro "preemptible operating system" through relatively streamlined code.
 
-當然，學習《作業系統設計》的道路還很長，mini-riscv-os 沒有《檔案系統》，而且我還沒學會 RISC-V 當中的 super mode 與 user mode 之控制與切換方式，也還沒引入 RISC-V 的虛擬記憶體機制，因此本章的程式碼仍然只有使用 machine mode，因此沒辦法提供較完整的《權限與保護機制》。
+Of course, there is still a long way to go to learn "Operating System Design". mini-riscv-os does not have "File System", and I have not learned the control and switching methods of super mode and user mode in RISC-V, nor have I introduced it. RISC-V's virtual memory mechanism, so the code in this chapter still only uses machine mode, so it is unable to provide a more complete "Permissions and Protection Mechanism".
 
-還好，這些事情已經有人做好了，您可以透過學習 xv6-riscv 這個由 MIT 所設計的教學型作業系統，進一步了解這些較複雜的機制，xv6-riscv 的原始碼總共有八千多行，雖然不算太少，但是比起那些動則數百萬行到數千萬行的 Linux / Windows 而言，xv6-riscv 算是非常精簡的系統了。
+Fortunately, someone has already done these things. You can learn more about these more complex mechanisms by studying xv6-riscv, a teaching operating system designed by MIT. The source code of xv6-riscv has a total of more than 8,000 lines. , although not too few, xv6-riscv is a very streamlined system compared to Linux/Windows, which can run from millions to tens of millions of lines.
 
 - https://github.com/mit-pdos/xv6-riscv
 
-然而 xv6-riscv 原本只能在 linux 下編譯執行，但是我把其中的 mkfs/mkfs.c 修改了一下，就能在 windows + git bash 這樣和 mini-riscv-os 一樣的環境下編譯執行了。
+However, xv6-riscv can only be compiled and executed under Linux, but I modified mkfs/mkfs.c and it can be compiled and executed in the same environment as mini-riscv-os such as windows + git bash.
 
-您可以從下列網址中取得 windows 版的 xv6-riscv 原始碼，然後編譯執行看看，應該可以站在 mini-riscv-os 的基礎上，進一步透過 xv6-riscv 學習更進階的作業系統設計原理。
+You can get the windows version of xv6-riscv source code from the following URL, and then compile and execute it. You should be able to learn more advanced operating system design principles through xv6-riscv based on mini-riscv-os. .
 
 - https://github.com/ccc-c/xv6-riscv-win
 
-以下提供更多關於 RISC-V 的學習資源，以方便大家在學習 RISC-V 作業系統設計時，不需再經過太多的摸索。
+The following provides more learning resources about RISC-V, so that everyone can learn RISC-V operating system design without having to go through too much exploration.
 
 - [AwesomeCS Wiki](https://github.com/ianchen0119/AwesomeCS/wiki)
 - [Step by step, learn to develop an operating system on RISC-V](https://github.com/plctlab/riscv-operating-system-mooc)
-- [RISC-V 手册 - 一本开源指令集的指南 (PDF)](http://crva.ict.ac.cn/documents/RISC-V-Reader-Chinese-v2p1.pdf)
+- [RISC-V Manual - A guide to the open source instruction set (PDF)](http://crva.ict.ac.cn/documents/RISC-V-Reader-Chinese-v2p1.pdf)
 - [The RISC-V Instruction Set Manual Volume II: Privileged Architecture Privileged Architecture (PDF)](https://riscv.org//wp-content/uploads/2019/12/riscv-spec-20191213.pdf)
 - [RISC-V Assembly Programmer's Manual](https://github.com/riscv/riscv-asm-manual/blob/master/riscv-asm.md)
 - https://github.com/riscv/riscv-opcodes
   - https://github.com/riscv/riscv-opcodes/blob/master/opcodes-rv32i
-- [SiFive Interrupt Cookbook (SiFive 的 RISC-V 中斷手冊)](https://gitlab.com/ccc109/sp/-/blob/master/10-riscv/mybook/riscv-interrupt/sifive-interrupt-cookbook-zh.md)
+- [SiFive Interrupt Cookbook (SiFive's RISC-V interrupt manual)](https://gitlab.com/ccc109/sp/-/blob/master/10-riscv/mybook/riscv-interrupt/sifive-interrupt-cookbook- zh.md)
 - [SiFive Interrupt Cookbook -- Version 1.0 (PDF)](https://sifive.cdn.prismic.io/sifive/0d163928-2128-42be-a75a-464df65e04e0_sifive-interrupt-cookbook.pdf)
-- 進階: [proposal for a RISC-V Core-Local Interrupt Controller (CLIC)](https://github.com/riscv/riscv-fast-interrupt/blob/master/clic.adoc)
+- Advanced: [proposal for a RISC-V Core-Local Interrupt Controller (CLIC)](https://github.com/riscv/riscv-fast-interrupt/blob/master/clic.adoc)
+- original article by Chen Zhongcheng.
 
-希望這份 mini-riscv-os 教材能幫助讀者在學習 RISC-V OS 設計上節省一些寶貴的時間！
+I hope this mini-riscv-os textbook can help readers save some valuable time in learning RISC-V OS design!
 
-               陳鍾誠 2020/11/15 於金門大學
+

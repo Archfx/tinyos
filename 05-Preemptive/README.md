@@ -1,73 +1,92 @@
 # Preemptive Multitasking
 
-[lib.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/lib.c
-[os.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/os.c
-[timer.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/timer.c
-[sys.s]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/sys.s
-[task.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/task.c
-[user.c]: https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/user.c
+
+In the [MultiTasking](https://archfx.github.io/posts/2023/09/tinyos3/) episode of the **TinyOS**🐞 tutorial series, we implemented "Cooperative Multitasking". Next in [TimerInterrupt](https://archfx.github.io/posts/2023/09/tinyos4/) episode, we discussed how the RISC-V time interrupt mechanism works. If you have missed them, I highly recommend going through them before proceeding.
+
+In this episode, we plan to combine the two techniques of the above episodes to implement a "Preemptive" operating system with forced time interruption. Technically, TinyOS is going to be a real-time operating system (RTOS) at the end of this episode.
 
 
-In [03-MultiTasking](03-MultiTasking.md) in Chapter 3, we implemented a "Cooperative Multitasking" operating system. However, since no time interruption mechanism is introduced, it cannot become a "Preemptive" multi-tasking system.
 
-In [04-TimerInterrupt](04-TimerInterrupt.md) in Chapter 4, we demonstrate the principle of RISC-V’s time interrupt mechanism.
+## Simulation
 
-Finally, we have reached Chapter 5. We plan to combine the technology of the first two chapters to implement a "Preemptive" operating system with forced time interruption. Such a system can be regarded as a miniature embedded operating system.
+As we discussed in earlier episodes, we know that where there are multple processes running parallely, they need share the same set of resources between them. So with that in mind, let's run the simulation. Simulation steps are as usual.
+
+If you missed the first article about setting up the environment, you can check it from [here](https://archfx.github.io/posts/2023/08/tinyos0/).
 
 
-## System execution
 
-First, let us take a look at the execution status of the system. You can see that in the following execution results, the system switches between OS, Task0, and Task1 in turn.
-
+First let's take a look at the system's behaviour.
 ```sh
-$ make qemu
-Press Ctrl-A and then X to exit QEMU
-qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf
-OS start
-OS: Activate next task
-Task0: Created!
-Task0: Running...
-Task0: Running...
-Task0: Running...
-timer_handler: 1
-OS: Back to OS
-
-OS: Activate next task
-Task1: Created!
-Task1: Running...
-Task1: Running...
-Task1: Running...
-timer_handler: 2
-OS: Back to OS
-
-OS: Activate next task
-Task0: Running...
-Task0: Running...
-Task0: Running...
-timer_handler: 3
-OS: Back to OS
-
-OS: Activate next task
-Task1: Running...
-Task1: Running...
-Task1: Running...
-timer_handler: 4
-OS: Back to OS
-
-OS: Activate next task
-Task0: Running...
-Task0: Running...
-Task0: Running...
-QEMU: Terminated
+cd tinyos/05-Preemptive
+make qemu
 ```
+<code>
+Press Ctrl-A and then X to exit QEMU<br>
+qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf<br>
+OS start<br>
+OS: Activate next task<br>
+Task0: Created! <br>
+Task0: Running... <br>
+Task0: Running... <br>
+Task0: Running... <br>
+timer_handler: 1 <br>
+OS: Back to OS <br>
+&nbsp; <br>
+OS: Activate next task <br>
+Task1: Created! <br>
+Task1: Running... <br>
+Task1: Running... <br>
+Task1: Running... <br>
+timer_handler: 2 <br>
+OS: Back to OS <br>
+&nbsp; <br>
+OS: Activate next task <br>
+Task0: Running... <br>
+Task0: Running... <br>
+Task0: Running... <br>
+timer_handler: 3 <br>
+OS: Back to OS <br>
+&nbsp; <br>
+OS: Activate next task
+Task1: Running... <br>
+Task1: Running... <br>
+Task1: Running... <br>
+timer_handler: 4<br>
+OS: Back to OS<br>
+&nbsp; <br>
+OS: Activate next task<br>
+Task0: Running... <br>
+Task0: Running... <br>
+Task0: Running... <br>
+QEMU: Terminated<br>
+</code>
 
-This situation is very similar to [03-MultiTasking](03-MultiTasking.md) in Chapter 3, both of which have the following execution sequence.
+As we can see, system switches the context between OS, Task0, and Task1 during the execution This situation is very similar to the simulation of [MultiTasking](https://archfx.github.io/posts/2023/09/tinyos3/) episode, where both of which have the following execution sequence.
 
-```
-OS=>Task0=>OS=>Task1=>OS=>Task0=>OS=>Task1....
-```
+<pre class="mermaid">
+    stateDiagram-v2
+    direction LR
+    State1 :OS
+	State2 : Task0
+	State3 : OS
+	State4 :Task1
+	State5 : OS
+	State6 : Task0
+	State7 : OS
+	State8 : Task1
+	
+    State1 --> State2
+	State2 --> State3
+	State3 --> State4
+	State4 --> State5
+	State5 --> State6
+	State6 --> State7
+	State7 --> State8
 
-The only difference is that the user process in Chapter 3 must actively return control to the operating system through `os_kernel()`.
+</pre>
+
+The only difference is that the user process in [MultiTasking](https://archfx.github.io/posts/2023/09/tinyos3/) episode must actively return control to the operating system through `os_kernel()`.
+
 ```cpp
 void user_task0(void)
 {
@@ -82,7 +101,8 @@ void user_task0(void)
 }
 ```
 
-However, in [05-Preemptive](05-Preemptive.md) of this chapter, the user schedule does not need to be actively handed back to the OS, but the OS forces the switching action through time interruption.
+However, during this simulation, the user schedule does not need to be actively handed back to the OS, but the OS forces the switching action through time interruption.
+
 ```cpp
 void user_task0(void)
 {
@@ -94,7 +114,7 @@ void user_task0(void)
 }
 ```
 
-The lib_delay in [lib.c] is actually a delay loop and does not return control.
+The lib_delay in [lib.c](https://github.com/Archfx/tinyos/05-Preemptive/lib.c) is actually a delay loop and does not return control.
 
 ```cpp
 void lib_delay(volatile int count)
@@ -106,11 +126,11 @@ void lib_delay(volatile int count)
 
 On the contrary, the operating system will forcefully take back control through time interruption. (Because lib_delay has a long delay, the operating system usually interrupts its `while (count--)` loop to take back control)
 
-## Operating system [os.c]
+## OS Kernel
 
-- https://github.com/ccc-c/mini-riscv-os/blob/master/05-Preemptive/os.c
 
-The operating system os.c will initially call `user_init()` to allow the user to create tasks (in this example, user_task0 and user_task1 will be created in [user.c].
+
+The operating system [os.c](https://github.com/Archfx/tinyos/05-Preemptive/os.c) will initially call `user_init()` to allow the user to create tasks (in this example, user_task0 and user_task1 will be created in [user.c](https://github.com/Archfx/tinyos/05-Preemptive/user.c).
 
 ```cpp
 #include "os.h"
@@ -139,7 +159,7 @@ void user_init() {
 }
 ```
 
-Then the operating system will set the time interrupt through the `timer_init()` function in `os_start()`, and then enter the main loop of `os_main()`, which adopts Round-Robin's large cycle scheduling. Method, each time you switch, select the next task to execute (if you have reached the last task, the next task will be the 0th task).
+Then the operating system will set the time interrupt through the `timer_init()` function in `os_start()`, and then enter the main loop of `os_main()`, which adopts Round-Robin scheduling. In Round robin scheduling each process is assigned a fixed time slice in a cyclic manner, ensuring fairness by giving each process equal time on the CPU regardless of its priority or execution time. 
 
 ```cpp
 
@@ -171,7 +191,7 @@ int os_main(void)
 }
 ```
 
-In the interrupt mechanism of 05-Preemptive, we modified the interrupt vector table:
+In the  interrupt mechanism  of [sys.s](https://github.com/Archfx/tinyos/05-Preemptive/sys.s), we modified the interrupt vector table as below.
 
 ```cpp
 .globl trap_vector
@@ -196,7 +216,7 @@ trap_vector:
 	mret
 ```
 
-When an interrupt occurs, the interrupt vector table `trap_vector()` will call `trap_handler()`:
+Essentially what it does is when an interrupt occurs, the interrupt vector table `trap_vector()` will call `trap_handler()` in [trap.c](https://github.com/Archfx/tinyos/05-Preemptive/trap.c).
 
 
 ```cpp
@@ -243,21 +263,16 @@ reg_t trap_handler(reg_t epc, reg_t cause)
 }
 ```
 
-After jumping to `trap_handler()`, it will call different handlers for different types of interrupts, so we can think of it as an interrupt dispatch task relay station:
+After jumping to `trap_handler()`, it will call different handlers for different types of interrupts, so we can think of it as an interrupt dispatch task relay station.
 
-```
-                         +----------------+
-                         | soft_handler() |
-                 +-------+----------------+
-                 |
-+----------------+-------+-----------------+
-| trap_handler() |       | timer_handler() |
-+----------------+       +-----------------+
-                 |
-                 +-------+-----------------+
-                         | exter_handler() |
-                         +-----------------+
-```
+<pre class="mermaid">
+graph LR
+    C[trap_handler] --> D[soft_handler]
+    C --> E[timer_handler]
+    C --> F[exter_handler]
+
+</pre>
+
 
 `trap_handler` can hand over interrupt processing to different handlers according to different interrupt types. This can greatly improve the scalability of the operating system.
 ```cpp
@@ -302,7 +317,7 @@ void timer_handler()
 
 ```
 
-See `timer_handler()` in [timer.c], it will reset `MTIMECMP`.
+If you observe the function `timer_handler()` in [timer.c](https://github.com/Archfx/tinyos/05-Preemptive/timer.c), you can see that it invokes reset `MTIMECMP`.
 
 ```cpp
 /* In trap_handler() */
@@ -319,19 +334,20 @@ case 7:
 // ...
 ```
 
-- In order to avoid interrupt nesting in Timer Interrupt, `trap_handler()` will close the timer interrupt before processing the interrupt, and then open it again after the processing is completed.
-- After `timer_handler()` is executed, `trap_handler()` will point mepc to `os_kernel()` to achieve the task switching function.
-  In other words, if the interrupt does not belong to Timer Interrupt, the Program counter will jump back to the state before entering the interrupt. This step is defined in `trap_vector()`:
+In order to avoid interrupt nesting in Timer Interrupt, `trap_handler()` will close the timer interrupt before processing the interrupt, and then open it again after the processing is completed.
 
-```assembly=
+After `timer_handler()` is executed, `trap_handler()` will point mepc to `os_kernel()` to achieve the task switching function.
+  In other words, if the interrupt does not belong to Timer Interrupt, the Program counter will jump back to the state before entering the interrupt. This step is defined in `trap_vector()` as below. 
+
+```c
 csrr	a0, mepc # a0 => arg1 (return_pc) of trap_handler()
 ```
 
 > **Note**
-> In RISC-V, the parameters of the function will be stored in the a0 - a7 registers first. If there are not enough, they will be stored in the Stack.
+> In RISC-V, the parameters of the function will be first stored in the a0 - a7 registers. If the space is not enough, they will be stored in the Stack.
 > Among them, the a0 and a1 registers also serve as function return values.
 
-Finally, remember to import the trap and timer initialization actions when the Kernel is started:
+Finally, we import the trap and timer initialization actions when the Kernel is started as illustrated below.
 
 ```cpp
 void os_start()
@@ -343,36 +359,16 @@ void os_start()
 }
 ```
 
-By forcibly taking back control through time interruption, we don't have to worry about a bully schedule taking over the CPU, and the system will not be stuck by the bully and completely paralyzed. This is the most important "schedule management mechanism" in modern operating systems. .
+By forcibly taking back control through time interruption, we don't have to worry about a bully schedule taking over the CPU, and the system will not be stuck by the bully and completely paralyzed. This is the most important "schedule management mechanism" in modern operating systems. 
 
-Although mini-riscv-os is just a micro embedded operating system, it still demonstrates the design principle of a specific and micro "preemptible operating system" through relatively streamlined code.
+## Remarks
 
-Of course, there is still a long way to go to learn "Operating System Design". mini-riscv-os does not have "File System", and I have not learned the control and switching methods of super mode and user mode in RISC-V, nor have I introduced it. RISC-V's virtual memory mechanism, so the code in this chapter still only uses machine mode, so it is unable to provide a more complete "Permissions and Protection Mechanism".
+Although TinyOS is just a "tiny" embedded operating system, it still demonstrates the design principle of a specific and simple "preemptible operating system" through relatively streamlined code.
 
-Fortunately, someone has already done these things. You can learn more about these more complex mechanisms by studying xv6-riscv, a teaching operating system designed by MIT. The source code of xv6-riscv has a total of more than 8,000 lines. , although not too few, xv6-riscv is a very streamlined system compared to Linux/Windows, which can run from millions to tens of millions of lines.
+Of course, there is still a long way to go to learn "Operating System Design". In particular,  TinyOS does not have a "File System", and we haven't even touched on the areas related to control and switching methods of supervisor mode and user mode in RISC-V. Further, OS needs to handle virtual memory mechanisms, so that processes cannot steal other process's data.
 
-- https://github.com/mit-pdos/xv6-riscv
+Fortunately, you can learn more about these more complex mechanisms by studying [xv6-riscv](https://github.com/mit-pdos/xv6-riscv), a teaching operating system designed by MIT. The source code of xv6-riscv has a total of more than 8,000 lines, although not too few, xv6-riscv is a very streamlined system compared to modern Linux and Windows, which can run from millions to tens of millions of lines.
 
-However, xv6-riscv can only be compiled and executed under Linux, but I modified mkfs/mkfs.c and it can be compiled and executed in the same environment as mini-riscv-os such as windows + git bash.
-
-You can get the windows version of xv6-riscv source code from the following URL, and then compile and execute it. You should be able to learn more advanced operating system design principles through xv6-riscv based on mini-riscv-os. .
-
-- https://github.com/ccc-c/xv6-riscv-win
-
-The following provides more learning resources about RISC-V, so that everyone can learn RISC-V operating system design without having to go through too much exploration.
-
-- [AwesomeCS Wiki](https://github.com/ianchen0119/AwesomeCS/wiki)
-- [Step by step, learn to develop an operating system on RISC-V](https://github.com/plctlab/riscv-operating-system-mooc)
-- [RISC-V Manual - A guide to the open source instruction set (PDF)](http://crva.ict.ac.cn/documents/RISC-V-Reader-Chinese-v2p1.pdf)
-- [The RISC-V Instruction Set Manual Volume II: Privileged Architecture Privileged Architecture (PDF)](https://riscv.org//wp-content/uploads/2019/12/riscv-spec-20191213.pdf)
-- [RISC-V Assembly Programmer's Manual](https://github.com/riscv/riscv-asm-manual/blob/master/riscv-asm.md)
-- https://github.com/riscv/riscv-opcodes
-  - https://github.com/riscv/riscv-opcodes/blob/master/opcodes-rv32i
-- [SiFive Interrupt Cookbook (SiFive's RISC-V interrupt manual)](https://gitlab.com/ccc109/sp/-/blob/master/10-riscv/mybook/riscv-interrupt/sifive-interrupt-cookbook- zh.md)
-- [SiFive Interrupt Cookbook -- Version 1.0 (PDF)](https://sifive.cdn.prismic.io/sifive/0d163928-2128-42be-a75a-464df65e04e0_sifive-interrupt-cookbook.pdf)
-- Advanced: [proposal for a RISC-V Core-Local Interrupt Controller (CLIC)](https://github.com/riscv/riscv-fast-interrupt/blob/master/clic.adoc)
-- original article by Chen Zhongcheng.
-
-I hope this mini-riscv-os textbook can help readers save some valuable time in learning RISC-V OS design!
+I hope this episode of TinyOS tutorial series gave you the basic understanging about how the preemptive multitasking is working on RISC-V environment. In the next episode let's discuss about Spinlocks in RISC-V.
 
 

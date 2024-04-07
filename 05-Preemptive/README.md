@@ -16,8 +16,14 @@ If you missed the first article about setting up the environment, you can check 
 
 
 First let's take a look at the system's behaviour.
+
 ```sh
 cd tinyos/05-Preemptive
+make
+```
+
+
+```sh
 make qemu
 ```
 <code>

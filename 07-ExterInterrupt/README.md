@@ -85,7 +85,7 @@ Each PIC interrupt source will be represented by a temporary register. By adding
 
 ## Interrupts to TinyOS
 
-I think so far we looked at the background of the interrupts. Let's add this functionality to the TinyOS operating system. First, we need to initialize the Virt's PLIC controller. For that we use the `plic_init()` function, which is defined in [plic.c](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/plic.c):
+I think so far we looked at the background of the interrupts. Let's add this functionality to the TinyOS operating system. First, we need to initialize Virt's PLIC controller. For that, we use the `plic_init()` function, which is defined in [plic.c](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/plic.c):
 
 ```cpp
 void plic_init()
@@ -113,7 +113,7 @@ As shown in the above example, `plic_init()` mainly performs following initializ
 
 - Set the priority of UART_IRQ. Since PLIC can manage multiple external interrupt sources, we must set priorities for different interrupt sources. Then in case of conflicting requests, PLIC will know which IRQ to process first.
 - Enable UART interrupt for hart0
-- Set threshold. IRQs less than or equal to this threshold will be ignored by PLIC. We can configure the threshould using,
+- Set threshold. IRQs less than or equal to this threshold will be ignored by PLIC. We can configure the threshold using,
 ```cpp
 *(uint32_t *)PLIC_MTHRESHOLD(hart) = 10;
 ```
@@ -121,7 +121,7 @@ In this way, the system will not process the UART's IRQ.
 
 - Enable external interrupts and global interrupts in Machine mode. It should be noted that this project originally used `trap_init()` to enable global interrupts in Machine mode. After this modification, we changed `plic_init()` to be responsible.
 
-Note that the preripherals also need configuration. In case of UART, settings such as **baud rate** and other actions. `uart_init()` is defined in [lib.c](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/lib.c).
+Note that the peripherals also need configuration. In the case of UART, settings such as **baud rate** and other actions. `uart_init()` is defined in [lib.c](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/lib.c).
 
 ### Modify Trap Handler
 
@@ -158,7 +158,7 @@ void external_handler()
 }
 ```
 
-Because the goal this time is to enable the operating system to process UART IRQ, we need to add that to the interupt request as above. This will invoke the function `lib_isr()`. 
+Because the goal this time is to enable the operating system to process UART IRQ, we need to add that to the interrupt request as above. This will invoke the function `lib_isr()`. 
 ```cpp
 /* In lib.c */
 void lib_isr(void)
@@ -180,24 +180,24 @@ void lib_isr(void)
 ```
 
 The principle of `lib_isr()` is quite simple. It just repeatedly detects whether the UART's RHR register has received new data. If it is empty (c == -1), it jumps out of the loop. Registers related to UART are defined in [riscv.h](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/riscv.h). Some register addresses have been added to support `lib_getc()`. The general definitions of UART registers are as follows:
->
-> ```cpp
-> #define UART 0x10000000L
-> #define UART_THR (volatile uint8_t *)(UART + 0x00) // THR:transmitter holding register
-> #define UART_RHR (volatile uint8_t *)(UART + 0x00) // RHR:Receive holding register
-> #define UART_DLL (volatile uint8_t *)(UART + 0x00) // LSB of Divisor Latch (write mode)
-> #define UART_DLM (volatile uint8_t *)(UART + 0x01) // MSB of Divisor Latch (write mode)
-> #define UART_IER (volatile uint8_t *)(UART + 0x01) // Interrupt Enable Register
-> #define UART_LCR (volatile uint8_t *)(UART + 0x03) // Line Control Register
-> #define UART_LSR (volatile uint8_t *)(UART + 0x05) // LSR:line status register
-> #define UART_LSR_EMPTY_MASK 0x40                   // LSR Bit 6: Transmitter empty; both the THR and LSR are empty
-> ```
+
+ ```cpp
+ #define UART 0x10000000L
+ #define UART_THR (volatile uint8_t *)(UART + 0x00) // THR:transmitter holding register
+ #define UART_RHR (volatile uint8_t *)(UART + 0x00) // RHR:Receive holding register
+ #define UART_DLL (volatile uint8_t *)(UART + 0x00) // LSB of Divisor Latch (write mode)
+ #define UART_DLM (volatile uint8_t *)(UART + 0x01) // MSB of Divisor Latch (write mode)
+ #define UART_IER (volatile uint8_t *)(UART + 0x01) // Interrupt Enable Register
+ #define UART_LCR (volatile uint8_t *)(UART + 0x03) // Line Control Register
+ #define UART_LSR (volatile uint8_t *)(UART + 0x05) // LSR:line status register
+ #define UART_LSR_EMPTY_MASK 0x40                   // LSR Bit 6: Transmitter empty; both the THR and LSR are empty
+ ```
 
 
 
 ## Simulation
 
-Let's see the TinyOS interrupt hendler in action. If you followed the tutorial series continously, you know the steps.
+Let's see the TinyOS interrupt handler in action. If you have followed the tutorial series continuously, you know the steps.
 
 ```sh
 cd 07-ExterInterrupt 
@@ -207,7 +207,7 @@ make
 riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c
 </code>
 
-Next you can run the Virt and type letters into the terminal, which will generate interrupt requests.
+Next, you can run the Virt and type letters into the terminal, which will generate interrupt requests.
 
 ```sh
 make qemu
@@ -246,4 +246,4 @@ OS: Back to OS<br>
 QEMU: Terminated<br>
 </code>
 
-In this episode, we have looked at the configuring external pheripherals and generating interupts with that. I hope this was a interesting episode since this basic functionality is required when you are dealing with embedded system in future.
+In this episode, we have looked at configuring external peripherals and generating interrupts with that. I hope this was an interesting episode since this basic functionality is required when you are dealing with embedded systems in the future.

@@ -111,25 +111,21 @@ void plic_init()
 ```
 As shown in the above example, `plic_init()` mainly performs following initialization actions:
 
-- Set the priority of UART_IRQ
-  Because PLIC can manage multiple external interrupt sources, we must set priorities for different interrupt sources. When these interrupt sources conflict, PLIC will know which IRQ to process first.
+- Set the priority of UART_IRQ. Since PLIC can manage multiple external interrupt sources, we must set priorities for different interrupt sources. Then in case of conflicting requests, PLIC will know which IRQ to process first.
 - Enable UART interrupt for hart0
-- Set threshold
-  IRQs less than or equal to this threshold will be ignored by PLIC. If we change the example to:
-
+- Set threshold. IRQs less than or equal to this threshold will be ignored by PLIC. We can configure the threshould using,
 ```cpp
 *(uint32_t *)PLIC_MTHRESHOLD(hart) = 10;
 ```
-
-------------------------
 In this way, the system will not process the UART's IRQ.
 
-- Enable external interrupts and global interrupts in Machine mode
-  It should be noted that this project originally used `trap_init()` to enable global interrupts in Machine mode. After this modification, we changed `plic_init()` to be responsible.
+- Enable external interrupts and global interrupts in Machine mode. It should be noted that this project originally used `trap_init()` to enable global interrupts in Machine mode. After this modification, we changed `plic_init()` to be responsible.
 
-> In addition to PLIC that needs to be initialized, UART also needs to be initialized, such as setting **baud rate** and other actions. `uart_init()` is defined in `lib.c`. Interested readers can do it themselves Check.
+Note that the preripherals also need configuration. In case of UART, settings such as **baud rate** and other actions. `uart_init()` is defined in [lib.c](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/lib.c).
 
 ### Modify Trap Handler
+
+We discussed about trap hander in the episode [Preemptive Scheduling](https://archfx.github.io/posts/2024/04/tinyos5/). You might remember the following diagram.
 
 
 <pre class="mermaid">
@@ -140,7 +136,7 @@ graph LR
 
 </pre>
 
-Previously, `trap_handler()` only supported the processing of time interrupts. This time we want to make it support the processing of external interrupts:
+Previously in [Preemptive Scheduling](https://archfx.github.io/posts/2024/04/tinyos5/), `trap_handler()` only supported the processing of time interrupts. This time we want to make it support the processing of external interrupts as well.
 ```cpp
 /* In trap.c */
 void external_handler()
@@ -162,7 +158,7 @@ void external_handler()
 }
 ```
 
-Because the goal this time is to enable the operating system to process UART IRQ, it is not difficult to find through the above code that we only process UART:
+Because the goal this time is to enable the operating system to process UART IRQ, we need to add that to the interupt request as above. This will invoke the function `lib_isr()`. 
 ```cpp
 /* In lib.c */
 void lib_isr(void)
@@ -183,9 +179,7 @@ void lib_isr(void)
 }
 ```
 
-The principle of `lib_isr()` is also quite simple. It just repeatedly detects whether the UART's RHR register has received new data. If it is empty (c == -1), it jumps out of the loop.
-
-> Registers related to UART are defined in `riscv.h`. This time, some register addresses have been added to support `lib_getc()`. The general contents are as follows:
+The principle of `lib_isr()` is quite simple. It just repeatedly detects whether the UART's RHR register has received new data. If it is empty (c == -1), it jumps out of the loop. Registers related to UART are defined in [riscv.h](https://github.com/Archfx/tinyos/blob/master/07-ExterInterrupt/riscv.h). Some register addresses have been added to support `lib_getc()`. The general definitions of UART registers are as follows:
 >
 > ```cpp
 > #define UART 0x10000000L
@@ -199,64 +193,57 @@ The principle of `lib_isr()` is also quite simple. It just repeatedly detects wh
 > #define UART_LSR_EMPTY_MASK 0x40                   // LSR Bit 6: Transmitter empty; both the THR and LSR are empty
 > ```
 
-The content of the modifications submitted this time is roughly as above. There are some implementation details that are not specifically mentioned. It is recommended that interested readers can trace the source code directly. I believe it will be more rewarding.
-With these basics in place, you can then add things like:
-
-- virtio driver & file system
-- system call
-- mini shell
-  and other functions to make **TinyOS** more scalable.
-
-## Reference
-
-- [Step by step, learn to develop an operating system on RISC-V](https://github.com/plctlab/riscv-operating-system-mooc)
-- [Qemu](https://github.com/qemu/qemu)
-- [AwesomeCS wiki](https://github.com/ianchen0119/AwesomeCS/wiki/2-5-RISC-V::%E4%B8%AD%E6%96%B7%E8%88%87%E7%95%B0%E5%B8%B8%E8%99%95%E7%90%86----PLIC-%E4%BB%8B%E7%B4%B9)
 
 
-## Build & Run
+## Simulation
+
+Let's see the TinyOS interrupt hendler in action. If you followed the tutorial series continously, you know the steps.
 
 ```sh
 cd 07-ExterInterrupt 
-$ make
-riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c
-
-cd 07-ExterInterrupt (feat/getchar)
-$ make qemu
-Press Ctrl-A and then X to exit QEMU
-qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf
-OS start
-OS: Activate next task
-Task0: Created!
-Task0: Running...
-Task0: Running...
-Task0: Running...
-Task0: Running...
-Task0: Running...
-external interruption!
-j
-Task0: Running...
-Task0: Running...
-external interruption!
-k
-Task0: Running...
-Task0: Running...
-Task0: Running...
-external interruption!
-j
-Task0: Running...
-external interruption!
-k
-external interruption!
-j
-Task0: Running...
-timer interruption!
-timer_handler: 1
-OS: Back to OS
-QEMU: Terminated
+make
 ```
+<code>
+riscv32-unknown-elf-gcc -nostdlib -fno-builtin -mcmodel=medany -march=rv32ima -mabi=ilp32 -g -Wall -T os.ld -o os.elf start.s sys.s lib.c timer.c task.c os.c user.c trap.c lock.c plic.c
+</code>
 
+Next you can run the Virt and type letters into the terminal, which will generate interrupt requests.
 
+```sh
+make qemu
+```
+<code>
+Press Ctrl-A and then X to exit QEMU<br>
+qemu-system-riscv32 -nographic -smp 4 -machine virt -bios none -kernel os.elf<br>
+OS start<br>
+OS: Activate next task<br>
+Task0: Created!<br>
+Task0: Running...<br>
+Task0: Running...<br>
+Task0: Running...<br>
+Task0: Running...<br>
+Task0: Running...<br>
+external interruption!<br>
+j<br>
+Task0: Running...<br>
+Task0: Running...<br>
+external interruption!<br>
+k<br>
+Task0: Running...<br>
+Task0: Running...<br>
+Task0: Running...<br>
+external interruption!<br>
+j<br>
+Task0: Running...<br>
+external interruption!<br>
+k<br>
+external interruption!<br>
+j<br>
+Task0: Running...<br>
+timer interruption!<br>
+timer_handler: 1<br>
+OS: Back to OS<br>
+QEMU: Terminated<br>
+</code>
 
-As the example above, when process running on trap.c, line 27 (Timer Interrupt).
-The process will be suspended automatically until you press the key `c` (continue) or `s` (step).
+In this episode, we have looked at the configuring external pheripherals and generating interupts with that. I hope this was a interesting episode since this basic functionality is required when you are dealing with embedded system in future.

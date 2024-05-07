@@ -1,6 +1,17 @@
-# 08-BlockDeviceDriver -- RISC-V 的嵌入式作業系統
+# 08-BlockDeviceDriver -- RISC-V embedded operating system
 
-在實現外部中斷的機制以後，我們已經在先前的 Lab 中加入了 UART 的 ISR，為了讓作業系統能夠讀取磁碟資料，我們必須加入 VirtIO 的 ISR :
+VirtIO is a standardized interface for virtual machines (VMs) that allows them to communicate efficiently with their host systems. It aims to provide a common set of drivers for various virtualization platforms, enabling improved performance and interoperability.
+
+Originally developed for the Linux KVM (Kernel-based Virtual Machine) hypervisor, VirtIO has since been adopted by other virtualization platforms such as QEMU, Xen, and VirtualBox.
+
+VirtIO consists of several components:
+
+VirtIO devices: These are virtualized devices that emulate physical hardware in the VM. Examples include virtual network adapters, disk controllers, and memory ballooning devices.
+VirtIO drivers: These are the device drivers installed in the guest operating system (OS) to communicate with VirtIO devices. Unlike traditional device drivers, VirtIO drivers are lightweight and optimized for virtualized environments.
+VirtIO specification: This defines the communication protocol between the guest OS and the virtualization host. It ensures compatibility and interoperability across different virtualization platforms.
+
+
+After implementing the external interrupt mechanism, we have added the UART ISR in the previous Lab. In order for the operating system to read disk data, we must add the VirtIO ISR:
 
 ```cpp
 void external_handler()
@@ -26,14 +37,14 @@ void external_handler()
 }
 ```
 
-當然，在開始之前我們仍需要認識一下 VirtIO 協定。
+Of course, we still need to understand the VirtIO protocol before starting.
 
-## 先備知識: Virtio
+## Prerequisites: Virtio
 
 ### Descriptor
 
-Descriptor 包含這些訊息: 地址，地址長度，某些 flag 和其他信息。
-使用 Descriptor，我們可以將設備指向 RAM 中任何緩衝區的內存位址。
+Descriptor contains this information: address, address length, certain flags and other information.
+Using a Descriptor, we can point the device to the memory address of any buffer in RAM.
 
 ```cpp
 struct virtq_desc
@@ -45,16 +56,16 @@ struct virtq_desc
 };
 ```
 
-- addr: 我們可以在 64-bit 內存地址內的任何位置告訴設備存儲位置。
-- len: 讓 Device 知道有多少內存可用。
-- flags: 用於控制 descriptor。
-- next: 告訴 Device 下一個描述符的 Index。如果指定了 VIRTQ_DESC_F_NEXT，Device 僅讀取該字段。否則無效。
+- addr: We can tell the device the storage location anywhere within a 64-bit memory address.
+- len: Let the Device know how much memory is available.
+- flags: used to control descriptor.
+- next: tells Device the Index of the next descriptor. The Device only reads this field if VIRTQ_DESC_F_NEXT is specified. Otherwise it is invalid.
 
 ### AvailableRing
 
-用來存放 Descriptor 的索引，當 Device 收到通知時，它會檢查 AvailableRing 確認需要讀取哪些 Descriptor。
+Index used to store Descriptors. When the Device receives the notification, it will check the AvailableRing to confirm which Descriptors need to be read.
 
-> 需要注意的是: Descriptor 和 AvailableRing 都存儲在 RAM 中。
+> Note: Descriptor and AvailableRing are both stored in RAM.
 
 ```cpp
 struct virtq_avail
@@ -68,8 +79,8 @@ struct virtq_avail
 
 ### UsedRing
 
-UsedRing 讓 Device 能夠向 OS 發送訊息，因此，Device 通常使用它來告知 OS 它已完成先前通知的請求。
-AvailableRing 與 UsedRing 非常相似，差別在於: OS 需要查看 UsedRing 得知哪個 Descriptor 已經被服務。
+UsedRing enables the Device to send messages to the OS, so it is often used by the Device to tell the OS that it has completed a previously notified request.
+AvailableRing is very similar to UsedRing, the difference is: OS needs to check UsedRing to know which Descriptor has been served.
 
 ```cpp
 struct virtq_used_elem
@@ -86,10 +97,9 @@ struct virtq_used
 };
 ```
 
-## 發送讀寫請求
+## Send read and write requests
 
-為了節省閱讀 VirtIO Spec 的時間，本次的 Block Device Driver 參考了 xv6-riscv 的實作，不過在 xv6 的檔案系統實作中有非常多層:
-
+In order to save time reading VirtIO Spec, this Block Device Driver refers to the implementation of xv6-riscv, but there are many layers in the implementation of xv6 file system:
 ```
 +------------------+
 |  File descriptor |
@@ -108,17 +118,17 @@ struct virtq_used
 +------------------+
 ```
 
-完成 Device Driver 會讓我們在日後實現檔案系統更為方便，此外，參考 xv6-riscv 的設計，我們還會需要實現一層 Buffer cache 用來同步硬碟上的資料。
+Completing the Device Driver will make it easier for us to implement the file system in the future. In addition, referring to the design of xv6-riscv, we will also need to implement a layer of Buffer cache to synchronize the data on the hard disk.
 
-### 指定寫入的 Sector
+### Specify the Sector to write to
 
 ```cpp
 uint64_t sector = b->blockno * (BSIZE / 512);
 ```
 
-### 分配 descriptor
+### Assign descriptor
 
-因為 [qemu-virt](https://github.com/qemu/qemu/blob/master/hw/block/virtio-blk.c) 會一次讀取 3 個 descriptor，所以在發送請求之前我們要先分配好這些空間。
+Because [qemu-virt](https://github.com/qemu/qemu/blob/master/hw/block/virtio-blk.c) will read 3 descriptors at a time, so we need to allocate them before sending the request Good these spaces.
 
 ```cpp
 static int
@@ -138,16 +148,15 @@ alloc3_desc(int *idx)
 }
 ```
 
-### 發送 Block request
+### Send Block request
 
-宣告 req 的結構:
+Declare the structure of req:
 
 ```cpp
 struct virtio_blk_req *buf0 = &disk.ops[idx[0]];
 ```
 
-因為磁碟有讀寫操作之分，為了讓 qemu 知道要讀還是要寫，我們要在請求中的 `type` 成員中寫入 **flag** :
-
+Because disks are divided into read and write operations, in order to let qemu know whether to read or write, we need to write **flag** in the `type` member of the request:
 ```cpp
 if(write)
   buf0->type = VIRTIO_BLK_T_OUT; // write the disk
@@ -157,9 +166,9 @@ buf0->reserved = 0; // The reserved portion is used to pad the header to 16 byte
 buf0->sector = sector; // specify the sector that we wanna modified.
 ```
 
-### 填充 Descriptor
+### Fill Descriptor
 
-到了這一步，我們已經分配好 Descriptor 與 req 的基本資料了，接著我們可以對這三個 Descriptor 做資料填充:
+At this step, we have allocated the basic data of Descriptor and req, and then we can fill in the data for these three Descriptors:
 
 ```cpp
 disk.desc[idx[0]].addr = buf0;
@@ -207,14 +216,13 @@ disk.desc[idx[0]].addr = buf0;
   free_chain(idx[0]);
 
 ```
+When the Descriptor is filled, `*R(VIRTIO_MMIO_QUEUE_NOTIFY) = 0;` will remind VIRTIO to receive our Block request.
 
-當 Descriptor 被填充完畢，`*R(VIRTIO_MMIO_QUEUE_NOTIFY) = 0;` 會提醒 VIRTIO 接收我們的 Block request。
+In addition, `while (b->disk == 1)` can ensure that the operating system receives the external interrupt issued by Virtio before continuing to execute the following code.
 
-此外，`while (b->disk == 1)` 可以確保作業系統收到 Virtio 發出的外部中斷後再繼續執行下面的程式碼。
+## Implement VirtIO’s ISR
 
-## 實作 VirtIO 的 ISR
-
-當系統程式接收到外部中斷，會根據 IRQ Number 判斷中斷是由哪一個外部設備發起的 (VirtIO, UART...)。
+When the system program receives an external interrupt, it will determine which external device initiated the interrupt (VirtIO, UART...) based on the IRQ Number.
 
 ```cpp
 void external_handler()
@@ -240,8 +248,7 @@ void external_handler()
   }
 }
 ```
-
-如果是 VirtIO 發起的中斷，便會轉派給 `virtio_disk_isr()` 進行處理。
+If the interrupt is initiated by VirtIO, it will be transferred to `virtio_disk_isr()` for processing.
 
 ```cpp
 void virtio_disk_isr()
@@ -275,10 +282,8 @@ void virtio_disk_isr()
 
 }
 ```
-
-`virtio_disk_isr()` 主要工作會將 disk 的狀態改下，告訴系統先前發出的讀寫操作已經被順利執行了。
-其中 `b->disk = 0;`，可以讓先前提到的 `while (b->disk == 1)` 順利跳出，釋放 disk 中的自旋鎖。
-
+The main job of `virtio_disk_isr()` is to change the status of the disk and tell the system that the previously issued read and write operations have been successfully executed.
+Among them, `b->disk = 0;` allows the previously mentioned `while (b->disk == 1)` to jump out smoothly and release the spin lock in disk.
 ```cpp
 int os_main(void)
 {
@@ -297,11 +302,6 @@ int os_main(void)
 }
 ```
 
-由於 mini-riscv-os 並沒有實作能夠休眠的鎖，所以筆者將 `disk_read()` 這個測試函式在開機時執行一次，若要向上實現更高層的檔案系統，就會需要使用 sleep lock，以避免當有多個任務嘗試取用硬碟資源時造成 deadlock 的情況發生。
+Since mini-riscv-os does not implement a lock that can sleep, the author will execute the `disk_read()` test function once at boot. If you want to implement a higher-level file system, you will need to use sleep lock. This is to avoid deadlock situations when multiple tasks try to access hard disk resources.
 
-## Reference
 
-- [xv6-riscv](https://github.com/mit-pdos/xv6-riscv)
-- [Lecture: Virtual I/O Protocol Operating Systems Stephen Marz](https://web.eecs.utk.edu/~smarz1/courses/cosc361/notes/virtio/)
-- [Implementing a virtio-blk driver in my own operating system](https://brennan.io/2020/03/22/sos-block-device/)
-- [xv6-rv32](https://github.com/riscv2os/xv6-rv32?fbclid=IwAR3eeG5jjIrpHM8Rh_0VdaZEikoEEtoIdDHZnx8CxxhqAcE89R0oZQoGaEY)

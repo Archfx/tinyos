@@ -1,16 +1,16 @@
-# 09-MemoryAllocator -- RISC-V 的嵌入式作業系統
+# 09-MemoryAllocator -- RISC-V embedded operating system
 
-## 先備知識: Linker Script 撰寫
+## Prerequisite knowledge: Linker Script writing
 
-撰寫 Linker Script 可以讓編譯器在連結的階段按照我們的想法將每個 Section 放到指令的記憶體位址上。
+Writing Linker Script allows the compiler to place each Section at the memory address of the instruction according to our ideas during the linking stage.
 
-![](https://camo.githubusercontent.com/1d58b18d5a293fe858931e54cce54ac53f4e86b08da25de332a16434688e7434/68747470733a2f2f692e696d6775722e636f6d2f756f72425063642e706e67)
+![](https://camo.githubusercontent.com/1d58b18d5a293fe858931e54cce54ac53f4e86b08da25de332a16434688e7434/68747470733a2f2f692e696d6775722e636f6d2f756f7 2425063642e706e67)
 
-以上圖為例，系統程式在執行時會將每個區段放到記憶體當中，至於到底要分配哪些區段，每個區段的屬性 (可讀可寫可執行) 就需要使用 Linker Script 來告訴編譯器了!
+Taking the above figure as an example, the system program will put each section into the memory when it is executed. As for which sections should be allocated, the attributes of each section (readable, writable, and executable) need to be determined using Linker Script. Tell the compiler!
 
-### 語法教學: 入口點與架構
+### Entry Points and Structure
 
-看到本專案的 `os.ld`，即為 mini-riscv-os 的 Linker Script:
+See the `os.ld` of this project, which is the Linker Script of mini-riscv-os:
 
 ```
 OUTPUT_ARCH( "riscv" )
@@ -22,27 +22,25 @@ MEMORY
   ram   (wxa!ri) : ORIGIN = 0x80000000, LENGTH = 128M
 }
 ```
+Observing the above script, we can draw several small conclusions:
 
-觀察上面的腳本，可以歸納出幾個小結論:
+- The output executable file will be executed on the `riscv` platform
+- The entry point of the program is `_start`
+- The memory name is `ram` and its attributes are:
+  - [x] W (writable)
+  - [x] X (executable)
+  - [x] A (assignable)
+  - [ ] R (read only)
+  - [ ] I (initialization)
+- The starting point of the memory is 0x80000000 and the length is 128 MB. In other words, the memory range is: 0x08000000 - 0x88000000.
 
-- 輸出的執行檔會執行在 `riscv` 平台
-- 程式的進入點為 `_start`
-- 該記憶體名稱為 `ram`，其屬性為:
-  - [x] W (可寫)
-  - [x] X (可執行)
-  - [x] A (可分配)
-  - [ ] R (唯讀)
-  - [ ] I (初始化)
-- 記憶體的起點為 0x80000000，長度為 128 MB，換言之，記憶體範圍為: 0x08000000 - 0x88000000。
-
-接著，可以看到 Linker Script 在 SECTION 段之中切割了好幾的區段，分別是:
-
+Next, you can see that the Linker Script has cut several sections in the SECTION section, namely:
 - .text
 - .rodata
 - .data
 - .bss
 
-以其中一段的範例對腳本進行解說:
+Let’s explain the script with an example from one of the paragraphs:
 
 ```
 .text : {
@@ -51,15 +49,14 @@ MEMORY
     PROVIDE(_text_end = .);
   } >ram AT>ram :text
 ```
-
-- `PROVIDE` 可以幫助我們定義符號，這些符號也都代表著一個記憶體位址
-- `*(.text.init) *(.text .text.*)` 幫助我們配對任何的 object file 中的 .text 區段。
+- `PROVIDE` can help us define symbols, which also represent a memory address
+- `*(.text.init) *(.text .text.*)` helps us match the .text section in any object file.
 - `>ram AT>ram :text`
 
-  - ram 為 VMA (Virtual Memory Address)，當程式運作時，section 會得到這個記憶體位址。
-  - ram :text 為 LMA (Load Memory Address)，當該區段被載入時，會被放到這個記憶體位址。
+  - ram is VMA (Virtual Memory Address). When the program runs, section will get this memory address.
+  - ram:text is LMA (Load Memory Address). When the section is loaded, it will be placed at this memory address.
 
-  最後，Linker Script 還定義了起始與終點的 Symbol 以及 Heap 的位置:
+  Finally, the Linker Script also defines the starting and ending Symbols and the location of the Heap:
 
   ```
   PROVIDE(_memory_start = ORIGIN(ram));
@@ -69,29 +66,27 @@ MEMORY
   PROVIDE(_heap_size = _memory_end - _heap_start);
   ```
 
-如果用圖片表示，記憶體的分布狀況如下:
+If represented by pictures, the distribution of memory is as follows:
 
 ![](https://i.imgur.com/NCJ3BgL.png)
 
-## 進入正題
+## Into the title
 
-### Heap 是什麼?
+### What is Heap?
 
-本文中所提到的 Heap 與資料結構的 Heap 不同，這邊的 Heap 是指可供作業系統與 Process 分配的記憶體空間，我們都知道， Stack 會存放已經初始化的固定長度資料，比起 Stack ， Heap 有了更多彈性，我們想要使用多少空間就分配多少空間，並且在使用後可以進行記憶體回收避免浪費。
-
+The Heap mentioned in this article is different from the data structure Heap. The Heap here refers to the memory space allocated by the operating system and Process. We all know that Stack will store initialized fixed-length data. Compared with Stack, Heap has more flexibility. We can allocate as much space as we want to use, and memory can be recycled after use to avoid waste.
 ```cpp
 #include <stdlib.h>
 int *p = (int*) malloc(sizeof(int));
 // ...
 free(p);
 ```
+The above C language example uses `malloc()` to configure dynamic memory, and calls `free()` to recycle the memory after use.
 
-上面的 C 語言範例便是使用 `malloc()` 進行動態記憶體的配置，並且在使用完畢後呼叫 `free()` 對記憶體進行回收。
+### Implementation of mini-riscv-os
 
-### mini-riscv-os 的實作
-
-了解 Heap 與 Linker Script 所描述出的記憶體結構後，就要進入本文的重點了!
-在這次的單元中，我們特別切割出一段空間供 Heap 使用，這樣一來，在系統程式中也可以實現類似於 Memory Allocator 的功能:
+After understanding the memory structure described by Heap and Linker Script, it is time to enter the focus of this article!
+In this unit, we specially cut out a section of space for Heap to use. In this way, functions similar to Memory Allocator can also be implemented in system programs:
 
 ```assembly
 .section .rodata
@@ -126,7 +121,7 @@ BSS_START: .word _bss_start
 BSS_END: .word _bss_end
 ```
 
-在 `mem.s` 中，我們宣告多個變數，每個變數都代表了先前在 Linker Script 定義的 Symbol，這樣一來，我們就可以在 C 程式中取用這些記憶體位址:
+In `mem.s`, we declare multiple variables, each representing a Symbol previously defined in the Linker Script, so that we can access these memory addresses in the C program:
 
 ```cpp
 extern uint32_t TEXT_START;
@@ -141,9 +136,9 @@ extern uint32_t HEAP_START;
 extern uint32_t HEAP_SIZE;
 ```
 
-### 如何管理記憶體區塊
+### How to manage memory blocks
 
-其實在主流的作業系統中，Heap 的結構非常複雜，會有多個列表管理未被分配的記憶體區塊以及不同大小的已分配記憶體區塊。
+In fact, in mainstream operating systems, the Heap structure is very complex. There are multiple lists to manage unallocated memory blocks and allocated memory blocks of different sizes.
 
 ```cpp
 static uint32_t _alloc_start = 0;
@@ -154,7 +149,7 @@ static uint32_t _num_pages = 0;
 #define PAGE_ORDER 8
 ```
 
-在 mini-riscv-os 中，我們統一區塊的大小為 25b Bits，也就是說，當我們呼叫 `malloc(sizeof(int))` 時，他也會一口氣分配 256 Bits 的空間給這個請求。
+In mini-riscv-os, our unified block size is 25b Bits, that is to say, when we call `malloc(sizeof(int))`, it will also allocate 256 Bits of space to this request in one go.
 
 ```cpp
 void page_init()
@@ -180,7 +175,7 @@ void page_init()
 }
 ```
 
-在 `page_init()` 當中可以看到，假設有 N 個 256 Bits 的記憶體區塊可供分配，我們勢必要實作出一個資料結構來管理記憶體區塊的狀態:
+As you can see in `page_init()`, assuming that there are N memory blocks of 256 Bits available for allocation, we must implement a data structure to manage the status of the memory blocks:
 
 ```cpp
 struct Page
@@ -189,14 +184,14 @@ struct Page
 };
 ```
 
-因此，Heap 的記憶體會被用來存放: N 個 Page Struct 以及 N 個 256 Bits 的記憶體區塊，呈現一對一的關係。
-至於，要如何分辨第 A 個記憶體區塊是否被分配，就要看與之對應的 Page Struct 中的 flag 記錄了什麼:
+Therefore, the Heap memory will be used to store: N Page Structs and N memory blocks of 256 Bits, showing a one-to-one relationship.
+As for how to tell whether the A-th memory block is allocated, it depends on what the flag in the corresponding Page Struct records:
 
 - 00: This means this page hasn't been allocated
 - 01: This means this page was allocated
 - 11: This means this page was allocated and is the last page of the memory block allocated
 
-`00` 與 `01` 的狀態十分易懂，至於 `11` 會在哪種情況用到呢?我們繼續往下看:
+The status of `00` and `01` is very easy to understand. As for the situation in which `11` will be used? Let’s continue to look down:
 
 ```cpp
 void *malloc(size_t size)
@@ -248,8 +243,7 @@ void *malloc(size_t size)
   return NULL;
 }
 ```
-
-透過閱讀 `malloc()` 的原始碼可以得知，當使用者裡用它嘗試獲取大於 256 Bits 的記憶體空間時，他會先計算請求的記憶體大小需要多少區塊才能滿足。計算完成後，他會在連續的記憶體區塊中尋找相連且未分配的記憶體區塊分配給該請求:
+By reading the source code of `malloc()`, we can know that when the user uses it to try to obtain a memory space larger than 256 Bits, he will first calculate how many blocks are needed to satisfy the requested memory size. After the calculation is completed, it will search for connected and unallocated memory blocks in consecutive memory blocks to assign to the request:
 
 ```
 malloc(513);
@@ -270,10 +264,5 @@ After Allocation:
 
 ```
 
-分配完成後，我們可以發現最後一個被分配的記憶體區塊的 Flag 為 `11`，這樣一來，等到使用者呼叫 `free()` 釋放這塊記憶體時，系統就可以透過 Flag 確認帶有 `11` 標記的區塊是需要被釋放的最後一塊區塊。
+After the allocation is completed, we can find that the Flag of the last allocated memory block is `11`. In this way, when the user calls `free()` to release this memory, the system can confirm it through the Flag. The block marked with `11` is the last block that needs to be freed.
 
-## Reference
-
-- [10 分鐘讀懂 linker scripts](https://blog.louie.lu/2016/11/06/10%E5%88%86%E9%90%98%E8%AE%80%E6%87%82-linker-scripts/)
-- [Step by step, learn to develop an operating system on RISC-V](https://github.com/plctlab/riscv-operating-system-mooc)
-- [Heap Exploitation](https://github.com/ianchen0119/About-Security/wiki/Heap-Exploitation)
